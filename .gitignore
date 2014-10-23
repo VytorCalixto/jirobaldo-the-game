@@ -1,5 +1,9 @@
 *tar.gz
 *.txt
 ci067_sdl2/
+data/*
+!data/skorpios-pack
+!data/audio
+!data/fonts
 *.swp
 main
