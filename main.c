@@ -5,108 +5,148 @@
 #include <SDL2/SDL.h> 
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
-#include <SDL2/SDL_mixer.h>
+#include "predio.c"
 
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
 
+Predio predio;
+
+//Carrega o SDL, retorna true se não ocorrerem erros durante a inicialização
+bool iniciarSdl();
+//Lê as opções dadas na invocação do programa
+void lerOpcoes(int argc, char **argv, int *passosPorSegundo, bool *isModoResolvedor);
+//Splash Screen
+void splashScreen(SDL_Renderer *screen, bool isModoResolvedor);
+//Operações ao finalizar o jogo
+void fimJogo();
 
 int main(int argc, char **argv){
-    int stepsPerSecond = 0;
+    int passosPorSegundo = 0;
     bool isModoResolvedor = false;
-    int c;
-    
-    //Lê as opções na linha de comando
-    while( (c = getopt(argc, argv, "f:s")) != -1 ){
-        switch(c){
-            case 'f':
-                stepsPerSecond = atoi(optarg);
-                break;
-            case 's':
-                isModoResolvedor = true;
-                break;
-        }
-    }
+    char *pathFile;
 
-    //printf("PPS: %d, MR: %d\n", stepsPerSecond, isModoResolvedor);
-    
-    char *path;
-    if(optind < argc){
-        path = argv[optind];
+    if(!iniciarSdl()){
+        return 1;
     }
-    //printf("Path: %s\n", path);
+    lerOpcoes(argc, argv, &passosPorSegundo, &isModoResolvedor);
+    if(optind < argc){
+        pathFile = argv[optind];
+    }
+    // printf("pps: %d, mr: %d, pf: %s\n", passosPorSegundo, isModoResolvedor, pathFile);
+    if(!novoPredio(&predio, pathFile)){
+        puts("Não foi possível abrir o arquivo.");
+        return 1;
+    }
     
     SDL_Window *window;
     SDL_Renderer *screen;
-    SDL_Surface *tmp;
-    SDL_Texture *bg, *titleText;
-    SDL_Event event;
-    TTF_Font *titleFont;
-    SDL_Rect titleRect;
-    Mix_Music *titleTheme;
-    bool quit = 0;
-    
-    if(SDL_Init(SDL_INIT_VIDEO) < 0 
-            || !IMG_Init(IMG_INIT_PNG) 
-            || TTF_Init() < 0
-            || Mix_OpenAudio( 22050, MIX_DEFAULT_FORMAT, 2, 1024 ) == -1 ){
-        return 1;
-    }
-
-    window = SDL_CreateWindow("Jirobaldo: Survivor", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+    window = SDL_CreateWindow("Jirobaldo: Survivor", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_BORDERLESS);
     screen = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     
-    int alpha = 0;
-    tmp = IMG_Load("data/bg1.jpg");
+    splashScreen(screen, isModoResolvedor);
+    // SDL_Event event;
+
+    SDL_DestroyRenderer(screen);
+    SDL_DestroyWindow(window);
+    fimJogo();
+    return 0;
+}
+
+bool iniciarSdl(){
+    if(SDL_Init(SDL_INIT_VIDEO) < 0){
+        return false;
+    } 
+    if(!IMG_Init(IMG_INIT_PNG)){
+        return false;
+    }
+    if(TTF_Init() < 0){
+        return false;
+    }
+    return true;
+}
+
+void lerOpcoes(int argc, char **argv, int *passosPorSegundo, bool *isModoResolvedor){
+    int c;
+    while( (c = getopt(argc, argv, "f:s")) != -1 ){
+        switch(c){
+            case 'f':
+                *passosPorSegundo = atoi(optarg);
+                break;
+            case 's':
+                *isModoResolvedor = true;
+                break;
+        }
+    }
+}
+
+void splashScreen(SDL_Renderer *screen, bool isModoResolvedor){
+    SDL_Surface *tmp;
+    SDL_Texture *bg, *titleText, *subtitleText;
+    TTF_Font *titleFont;
+    SDL_Rect titleRect, subtitleRect;
+    int alpha=0;
+
+    tmp = IMG_Load("data/images/fire.jpg");
     bg = SDL_CreateTextureFromSurface(screen, tmp);
     SDL_FreeSurface(tmp);
 
     titleFont = TTF_OpenFont("data/fonts/Plane-Crash.ttf", 48);
-    tmp = TTF_RenderUTF8_Solid(titleFont, "jirobaldo:survivor", (SDL_Color) {139, 0, 0});  
+    tmp = TTF_RenderUTF8_Solid(titleFont, "jirobaldo",
+        (SDL_Color) {180, 0, 0});
     titleText = SDL_CreateTextureFromSurface(screen, tmp);
     SDL_SetTextureAlphaMod(titleText, alpha);
-    titleRect.h = tmp->h;
     titleRect.w = tmp->w;
+    titleRect.h = tmp->h;
     titleRect.x = SCREEN_WIDTH/2 - titleRect.w/2;
     titleRect.y = SCREEN_HEIGHT/2 - titleRect.h/2;
     SDL_FreeSurface(tmp);
 
-    titleTheme = Mix_LoadMUS("data/audio/bost-imagine-the-fire.ogg");
+    tmp = TTF_RenderUTF8_Solid(titleFont, "the survivor",
+        (SDL_Color) {200, 200, 200});
+    subtitleText = SDL_CreateTextureFromSurface(screen, tmp);
+    SDL_SetTextureAlphaMod(subtitleText, 0);
+    subtitleRect.w = tmp->w;
+    subtitleRect.h = tmp->h;
+    subtitleRect.x = SCREEN_WIDTH/2 - subtitleRect.w/2;
+    subtitleRect.y = titleRect.y + titleRect.h;
+    SDL_FreeSurface(tmp);
 
-    Mix_PlayMusic(titleTheme, -1);
-    while(!quit){
+    while(alpha < 255){
+        SDL_SetRenderDrawColor(screen, 0, 0, 0, 255);
         SDL_RenderClear(screen);
         // SDL_RenderCopy(screen, bg, NULL, NULL);
         SDL_RenderCopy(screen, titleText, NULL, &titleRect);
+        SDL_RenderCopy(screen, subtitleText, NULL, &subtitleRect);
         SDL_RenderPresent(screen);
         
-        while(SDL_PollEvent(&event)){
-            if(event.type == SDL_QUIT){
-                quit = true;
-            }
-        }
-
-        if(alpha < 255){
-            alpha+=5;
-            SDL_SetTextureAlphaMod(titleText, alpha);
-        }else if(titleRect.y > SCREEN_HEIGHT/2 - titleRect.h/2 - 200){
-            titleRect.y -= 1;
-        }
+        alpha+=3;
+        SDL_SetTextureAlphaMod(titleText, alpha);
+        SDL_SetTextureAlphaMod(subtitleText, alpha);
 
         SDL_Delay(1000/30);
     }
-    Mix_PauseMusic();
+    carregarTexturasPredio(screen);
+    if(isModoResolvedor){
+        // carregarModoResolvedor();
+        // executarModoResolvedor();
+    }else{
+        SDL_RenderClear(screen);
+        renderAndarPredio(&predio, 0, screen);
+        SDL_RenderPresent(screen);
+        int i;
+        scanf("%d", &i);
+        // carregarModoInterativo();
+        // executarModoInterativo();
+    }
 
-    Mix_FreeMusic(titleTheme);
-    SDL_DestroyRenderer(screen);
-    SDL_DestroyWindow(window);
     SDL_DestroyTexture(bg);
     SDL_DestroyTexture(titleText);
     TTF_CloseFont(titleFont);
-    Mix_CloseAudio();
+}   
+
+void fimJogo(){
     TTF_Quit();
     IMG_Quit();
     SDL_Quit();
-
-    return 0;
 }
