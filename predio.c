@@ -113,7 +113,7 @@ void carregarTexturasPredio(){
 
     tmp = IMG_Load("data/skorpios-pack/Interior-Walls-Beige.png");
     parede = SDL_CreateTextureFromSurface(screen, tmp);
-    paredeRect.x = 0;
+    paredeRect.x = 32;
     paredeRect.y = 0;
     paredeRect.w = 32;
     paredeRect.h = 32;
@@ -168,29 +168,54 @@ void renderAndarPredio(Predio *predio, int andar){
             aux.y = i * aux.h;
             aux.x = j * aux.w;
             char c = predio->pisos[andar].pontos[i][j];
+            //Coloca chão em tudo
             SDL_RenderCopy(screen, chao, &chaoRect, &aux);
+            
+            //Coisas que ficam atrás do Jirobaldo
+            if(c == '#'){
+                /*if( (j + 1) < predio->w && (j - 1) >= 0 ){
+                    char esq = predio->pisos[andar].pontos[i][j-1];
+                    char dir = predio->pisos[andar].pontos[i][j+1];
+                    if(esq != '#' && dir !='#'){
+                        paredeRect.x = 7*32;
+                        paredeRect.y = 32;
+                    }
+                }else{
+                    paredeRect.x = 32;
+                    paredeRect.y = 0;
+                }*/
+                if(j == 0 || 
+                        (isPontoNoPredio(predio, i, j-1, andar)
+                         && predio->pisos[andar].pontos[i][j-1] != '#' ) ){
+                    paredeRect.x = 4*32;
+                    paredeRect.y = 4*32;
+                }
+                else{
+                    paredeRect.x = 32;
+                    paredeRect.y = 0;
+                }
+                SDL_RenderCopy(screen, parede, &paredeRect, &aux);
+            }else if(c == 'U'){
+                SDL_RenderCopy(screen, escadaAcima, &escadaAcimaRect, &aux);
+            }else if(c == 'D'){
+                SDL_RenderCopy(screen, escadaAbaixo, &escadaAbaixoRect, &aux);
+            }else if(c == 'E'){
+                SDL_RenderCopy(screen, escadaAbaixo, &escadaAbaixo, &aux);
+                SDL_RenderCopy(screen, escadaAcima, &escadaAcimaRect, &aux);
+            }
+
+            //Jirobaldo
             if(predio->jirobaldo.x == i && predio->jirobaldo.y == j){
                 SDL_RenderCopy(screen, jirobaldo, &jirobaldoRect, &aux);
             }
-            switch(c){
-                case '#':
-                    SDL_RenderCopy(screen, parede, &paredeRect, &aux);
-                    break;
-                case 'T':
-                    SDL_RenderCopy(screen, torneira, &torneiraRect, &aux);
-                    break;
-                case 'F':
-                    SDL_RenderCopy(screen, fogo, &fogoRect, &aux);
-                    break;
-                case 'S':
-                    SDL_RenderCopy(screen, saida, &saidaRect, &aux);
-                    break;
-                case 'U':
-                    SDL_RenderCopy(screen, escadaAcima, &escadaAcimaRect, &aux);
-                    break;
-                case 'D':
-                    SDL_RenderCopy(screen, escadaAbaixo, &escadaAbaixoRect, &aux);
-                    break;
+            
+            //Coisas que vão na frente do Jirobaldo
+            if(c == 'T'){
+                SDL_RenderCopy(screen, torneira, &torneiraRect, &aux);
+            }else if(c == 'F'){
+                SDL_RenderCopy(screen, fogo, &fogoRect, &aux);
+            }else if(c == 'S'){
+                SDL_RenderCopy(screen, saida, &saidaRect, &aux);
             }
         }
     }
