@@ -26,6 +26,7 @@ bool isPontoNoPredio(Predio *predio, int x, int y, int z);
 void carregarTexturasPredio();
 //Mostra graficamente um andar do prédio
 void renderAndarPredio(Predio *predio, int andar);
+void renderParedes(Pavimento *pavimento, int x, int y, int w, int h);
 
 bool novoPredio(Predio *predio, char *filePath){
     FILE *file;
@@ -160,8 +161,8 @@ void carregarTexturasPredio(){
 
 void renderAndarPredio(Predio *predio, int andar){
     SDL_Rect aux;
-    aux.w = SCREEN_HEIGHT/predio->h;
-    aux.h = SCREEN_HEIGHT/predio->h;
+    aux.h = (SCREEN_HEIGHT - 20)/predio->h;
+    aux.w = aux.h;
     int i, j;
     for(i = 0; i < predio->h; i++){
         for(j = 0; j < predio->w; j++){
@@ -173,34 +174,42 @@ void renderAndarPredio(Predio *predio, int andar){
             
             //Coisas que ficam atrás do Jirobaldo
             if(c == '#'){
-                /*if( (j + 1) < predio->w && (j - 1) >= 0 ){
+                /*if(j == 0 || 
+                        (isPontoNoPredio(predio, i, j-1, andar)
+                         && predio->pisos[andar].pontos[i][j-1] != '#'
+                         && predio->pisos[andar].pontos[i][j+1] == '#') ){
+                    paredeRect.x = 4*32;
+                    paredeRect.y = 4*32;
+                }else if(j > 0 && (j+1) < predio->w){
                     char esq = predio->pisos[andar].pontos[i][j-1];
                     char dir = predio->pisos[andar].pontos[i][j+1];
                     if(esq != '#' && dir !='#'){
-                        paredeRect.x = 7*32;
-                        paredeRect.y = 32;
+                        if(i > 0 
+                            && predio->pisos[andar].pontos[i-1][j-1] == '#'
+                            && predio->pisos[andar].pontos[i-1][j] == '#'
+                            && predio->pisos[andar].pontos[i-1][j+1] == '#'){
+                            paredeRect.x = 7*32;
+                            paredeRect.y = 32;
+                        }else{
+                            paredeRect.x = 7*32;
+                            paredeRect.y = 2*32;
+                        }
+                    }else{
+                        paredeRect.x = 32;
+                        paredeRect.y = 0;
                     }
                 }else{
                     paredeRect.x = 32;
                     paredeRect.y = 0;
-                }*/
-                if(j == 0 || 
-                        (isPontoNoPredio(predio, i, j-1, andar)
-                         && predio->pisos[andar].pontos[i][j-1] != '#' ) ){
-                    paredeRect.x = 4*32;
-                    paredeRect.y = 4*32;
                 }
-                else{
-                    paredeRect.x = 32;
-                    paredeRect.y = 0;
-                }
-                SDL_RenderCopy(screen, parede, &paredeRect, &aux);
+                SDL_RenderCopy(screen, parede, &paredeRect, &aux);*/
+                renderParedes(&predio->pisos[andar], i, j, predio->w, predio->h);
             }else if(c == 'U'){
                 SDL_RenderCopy(screen, escadaAcima, &escadaAcimaRect, &aux);
             }else if(c == 'D'){
                 SDL_RenderCopy(screen, escadaAbaixo, &escadaAbaixoRect, &aux);
             }else if(c == 'E'){
-                SDL_RenderCopy(screen, escadaAbaixo, &escadaAbaixo, &aux);
+                SDL_RenderCopy(screen, escadaAbaixo, &escadaAbaixoRect, &aux);
                 SDL_RenderCopy(screen, escadaAcima, &escadaAcimaRect, &aux);
             }
 
@@ -219,6 +228,57 @@ void renderAndarPredio(Predio *predio, int andar){
             }
         }
     }
+}
+
+void renderParedes(Pavimento *pavimento, int x, int y, int w, int h){
+    SDL_Rect aux;
+    aux.h = (SCREEN_HEIGHT - 20)/h; //-100px da barra de status
+    aux.w = aux.h;
+    aux.x = y * aux.w;
+    aux.y = x * aux.h;
+
+    if(y == 0 && pavimento->pontos[x][y+1] == '#'){
+        paredeRect.x = 4*32;
+        paredeRect.y = 4*32;
+    }else if(y == w - 1 && pavimento->pontos[x][y-1] == '#'){
+        paredeRect.x = 6*32;
+        paredeRect.y = 4*32;
+    }else if(y > 0 && y + 1 < w){
+        if(pavimento->pontos[x][y-1] == '#' && pavimento->pontos[x][y+1] == '#'){
+            paredeRect.x = 32;
+            paredeRect.y = 0;
+        }else if(pavimento->pontos[x][y+1] == '#'){
+            paredeRect.x = 4*32;
+            paredeRect.y = 4*32;
+        }else if(pavimento->pontos[x][y-1] == '#'){
+            paredeRect.x = 6*32;
+            paredeRect.y = 4*32;
+        }
+    }else{
+        paredeRect.x = 32;
+        paredeRect.y = 0;
+    }
+    SDL_RenderCopy(screen, parede, &paredeRect, &aux);
+
+    if(x == 0 && pavimento->pontos[x+1][y] == '#'){
+        paredeRect.x = 7*32;
+        paredeRect.y = 0;
+    }else if(x == h - 1 && pavimento->pontos[x-1][y] == '#'){
+        paredeRect.x = 5*32;
+        paredeRect.y = 32;
+    }else if(x > 0 && x + 1 < h){
+        if(pavimento->pontos[x+1][y] == '#'){
+            paredeRect.x = 7*32;
+            paredeRect.y = 0;
+        }else if(pavimento->pontos[x+1][y] != '#' && pavimento->pontos[x-1][y] == '#'){
+            paredeRect.x = 7*32;
+            paredeRect.y = 32;
+        }
+    }else{
+        paredeRect.x = 7*32;
+        paredeRect.y = 0;
+    }
+    SDL_RenderCopy(screen, parede, &paredeRect, &aux);
 }
 
 bool isPontoNoPredio(Predio *predio, int x, int y, int z){

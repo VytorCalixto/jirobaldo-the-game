@@ -135,36 +135,49 @@ void splashScreen(){
 
 void lidaComEventos(SDL_Event event){
     if(event.type == SDL_KEYDOWN){
-        switch(event.key.keysym.sym){
-            case SDLK_LEFT:
-                predio.jirobaldo.y--;
-                if(!jirobaldoValido()){
-                    predio.jirobaldo.y++;
-                }
-                break;
-            case SDLK_RIGHT:
-                predio.jirobaldo.y++;
-                if(!jirobaldoValido()){
+        if(isModoResolvedor){
+
+        }else{
+            switch(event.key.keysym.sym){
+                case SDLK_LEFT:
                     predio.jirobaldo.y--;
-                }
-                break;
-            case SDLK_UP:
-                predio.jirobaldo.x--;
-                if(!jirobaldoValido()){
-                    predio.jirobaldo.x++;
-                }
-                break;
-            case SDLK_DOWN:
-                predio.jirobaldo.x++;
-                if(!jirobaldoValido()){
+                    if(!jirobaldoValido()){
+                        predio.jirobaldo.y++;
+                    }
+                    break;
+                case SDLK_RIGHT:
+                    predio.jirobaldo.y++;
+                    if(!jirobaldoValido()){
+                        predio.jirobaldo.y--;
+                    }
+                    break;
+                case SDLK_UP:
                     predio.jirobaldo.x--;
-                }
-                break;
+                    if(!jirobaldoValido()){
+                        predio.jirobaldo.x++;
+                    }
+                    break;
+                case SDLK_DOWN:
+                    predio.jirobaldo.x++;
+                    if(!jirobaldoValido()){
+                        predio.jirobaldo.x--;
+                    }
+                    break;
+            }
         }
     }
 }
 
 bool jirobaldoValido(){
     int x = predio.jirobaldo.x, y = predio.jirobaldo.y, z = predio.jirobaldo.z;
-    return isPontoNoPredio(&predio, x, y, z) && (predio.pisos[z].pontos[x][y] != '#');
+    int baldes = predio.jirobaldo.baldes;
+    if(isPontoNoPredio(&predio, x, y, z)){
+        if(predio.pisos[z].pontos[x][y] == 'F'
+            && baldes > 0){
+            return true;
+        }else if(predio.pisos[z].pontos[x][y] != '#'){
+            return true;
+        }
+    }
+    return false;
 }
