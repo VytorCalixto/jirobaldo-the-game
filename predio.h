@@ -4,7 +4,7 @@
 #include "jirobaldo.h"
 //Definições para os retângulos das texturas
 #define PREDIO_CHAO 0
-#define PREDIO_SAIDA 0
+#define PREDIO_SAIDA 1
 #define LEFT_WALL 0
 #define LEFT_TOP_WALL 1
 #define TOP_WALL 2

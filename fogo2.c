@@ -21,6 +21,7 @@ void fimJogo();
 int main(int argc, char **argv){
     bool quit = false;
     SDL_Event event;
+    SDL_Rect aux;
 
     //Lê os parâmetros da linha de comando
     lerParametros(argc, argv);
@@ -35,6 +36,7 @@ int main(int argc, char **argv){
         puts("ERRO: Não foi possível criar o prédio. O arquivo é válido?");
         return 1;
     }
+    
     //Inicia SDL
     if(!iniciaSDL()){
         puts("ERRO: não foi possível iniciar o SDL");
@@ -59,11 +61,20 @@ int main(int argc, char **argv){
      *         Se for simulador lida com a jogabilidade
      *         Se for resolvedor, avança/retrocede um passo
      */
+    aux.h = gameViewport.h/predio.h;
+    aux.w = aux.h;
     while(!quit){
-        
+        SDL_RenderSetViewport(screen, &gameViewport);
+        SDL_SetRenderDrawColor(screen, 0, 0, 0, 255);
+        SDL_RenderClear(screen);
+        renderAndarPredio(screen, &predio, predio.jirobaldo.z, aux);
+        SDL_RenderPresent(screen);
+
         while(SDL_PollEvent(&event)){
             if(event.type == SDL_QUIT){
                 quit = true;
+            }else{
+                //Valida eventos
             }
         }
         SDL_Delay(1000/30);
@@ -104,20 +115,20 @@ bool iniciaSDL(){
     infoBarViewport.x = 0;
     infoBarViewport.y = 0;
     infoBarViewport.w = SCREEN_WIDTH;
-    infoBarViewport.h = 100;
+    infoBarViewport.h = INFO_BAR_HEIGHT;
 
     gameViewport.x = 0;
-    gameViewport.y = 100;
+    gameViewport.y = INFO_BAR_HEIGHT;
     gameViewport.w = (int) SCREEN_WIDTH - (SCREEN_WIDTH*0.2);
-    gameViewport.h = (int) SCREEN_HEIGHT - 100;
+    gameViewport.h = (int) SCREEN_HEIGHT - INFO_BAR_HEIGHT;
 
     topMapViewport.x = SCREEN_WIDTH - (SCREEN_WIDTH*0.2);
-    topMapViewport.y = 100;
+    topMapViewport.y = INFO_BAR_HEIGHT;
     topMapViewport.w = (SCREEN_WIDTH*0.2);
     topMapViewport.h = (SCREEN_WIDTH*0.2);
 
     downMapViewport.x = SCREEN_WIDTH - (SCREEN_WIDTH*0.2);
-    downMapViewport.y = 100 + (SCREEN_WIDTH*0.2);
+    downMapViewport.y = INFO_BAR_HEIGHT + (SCREEN_WIDTH*0.2);
     downMapViewport.w = (SCREEN_WIDTH*0.2);
     downMapViewport.h = (SCREEN_WIDTH*0.2);
     return true;

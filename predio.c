@@ -73,6 +73,8 @@ void carregarTexturasPredio(SDL_Renderer *screen, Predio *predio){
     predio->torneira = SDL_CreateTextureFromSurface(screen, tmp);
     predio->torneiraRect.h = 16;
     predio->torneiraRect.w = 16;
+    predio->torneiraRect.x = 0;
+    predio->torneiraRect.y = 21*16;
 
     //Chão e saída
     tmp = IMG_Load("data/skorpios-pack/Interior-Furniture.png");
@@ -85,7 +87,7 @@ void carregarTexturasPredio(SDL_Renderer *screen, Predio *predio){
     predio->chaoSaidaRect[PREDIO_SAIDA].w = 32;
     predio->chaoSaidaRect[PREDIO_SAIDA].h = 32;
     predio->chaoSaidaRect[PREDIO_SAIDA].x = 7*32;
-    predio->chaoSaidaRect[PREDIO_SAIDA].y = 2*32;
+    predio->chaoSaidaRect[PREDIO_SAIDA].y = 5*32;
     SDL_FreeSurface(tmp);
 
     //Fogo

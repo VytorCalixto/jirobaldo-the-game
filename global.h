@@ -7,6 +7,7 @@
 //Dimensões da tela
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
+#define INFO_BAR_HEIGHT 32
 
 //Janela e Renderer
 SDL_Window *window;
