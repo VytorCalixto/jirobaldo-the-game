@@ -157,6 +157,7 @@ void carregarTexturasPredio(SDL_Renderer *screen, Predio *predio){
 
 void renderAndarPredio(SDL_Renderer *screen, Predio *predio, int andar, SDL_Rect aux){
     int i, j;
+    predio->frame++;
     for(i = 0; i < predio->h; i++){
         for(j = 0; j < predio->w; j++){
             aux.y = i * aux.h;
@@ -185,8 +186,7 @@ void renderAndarPredio(SDL_Renderer *screen, Predio *predio, int andar, SDL_Rect
             if(c == 'T'){
                 SDL_RenderCopy(screen, predio->torneira, &predio->torneiraRect, &aux);
             }else if(c == 'F'){
-                predio->frame = (predio->frame + 1) % 5;
-                SDL_RenderCopy(screen, predio->fogo, &predio->fogoRect[predio->frame], &aux);
+                SDL_RenderCopy(screen, predio->fogo, &predio->fogoRect[predio->frame % 5], &aux);
             }else if(c == 'S'){
                 SDL_RenderCopy(screen, predio->chaoSaida, &predio->chaoSaidaRect[PREDIO_SAIDA], &aux);
             }
