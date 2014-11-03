@@ -15,9 +15,13 @@
 //Lê os parâmetros passados na linha de comando
 void lerParametros(int argc, char **argv);
 bool iniciaSDL();
-
+//Libera da memória as texturas, janelas, renderers e termina o SDL
+void fimJogo();
 
 int main(int argc, char **argv){
+    bool quit = false;
+    SDL_Event event;
+
     //Lê os parâmetros da linha de comando
     lerParametros(argc, argv);
 
@@ -43,7 +47,7 @@ int main(int argc, char **argv){
     //Splash screen e carregar texturas
     carregarTexturasPredio(screen, &predio);
     carregarTexturasJirobaldo(screen, &predio.jirobaldo);
-    
+
 
     //Se for modo resolvedor gera a solução
     // TODO: gerar solução
@@ -55,6 +59,17 @@ int main(int argc, char **argv){
      *         Se for simulador lida com a jogabilidade
      *         Se for resolvedor, avança/retrocede um passo
      */
+    while(!quit){
+        
+        while(SDL_PollEvent(&event)){
+            if(event.type == SDL_QUIT){
+                quit = true;
+            }
+        }
+        SDL_Delay(1000/30);
+    }
+
+    fimJogo();
     return 0;
 }
 
@@ -86,5 +101,32 @@ bool iniciaSDL(){
     if(TTF_Init() < 0){
         return false;
     }
+    infoBarViewport.x = 0;
+    infoBarViewport.y = 0;
+    infoBarViewport.w = SCREEN_WIDTH;
+    infoBarViewport.h = 100;
+
+    gameViewport.x = 0;
+    gameViewport.y = 100;
+    gameViewport.w = (int) SCREEN_WIDTH - (SCREEN_WIDTH*0.2);
+    gameViewport.h = (int) SCREEN_HEIGHT - 100;
+
+    topMapViewport.x = SCREEN_WIDTH - (SCREEN_WIDTH*0.2);
+    topMapViewport.y = 100;
+    topMapViewport.w = (SCREEN_WIDTH*0.2);
+    topMapViewport.h = (SCREEN_WIDTH*0.2);
+
+    downMapViewport.x = SCREEN_WIDTH - (SCREEN_WIDTH*0.2);
+    downMapViewport.y = 100 + (SCREEN_WIDTH*0.2);
+    downMapViewport.w = (SCREEN_WIDTH*0.2);
+    downMapViewport.h = (SCREEN_WIDTH*0.2);
     return true;
+}
+
+void fimJogo(){
+    SDL_DestroyRenderer(screen);
+    SDL_DestroyWindow(window);
+    TTF_Quit();
+    IMG_Quit();
+    SDL_Quit();
 }
