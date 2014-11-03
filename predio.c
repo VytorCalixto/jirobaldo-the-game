@@ -13,6 +13,7 @@ bool novoPredio(Predio *predio, char *arquivo){
         if(lePredio(predio, file)){
             return true;
         }
+        fclose(file);
     }
     return false;
 }
@@ -127,4 +128,66 @@ void carregarTexturasPredio(SDL_Renderer *screen, Predio *predio){
     predio->paredesRect[RIGHT_WALL].x = 2*16;
     predio->paredesRect[RIGHT_WALL].y = 3*16;
     SDL_FreeSurface(tmp);
+
+    //Escadas
+    tmp = IMG_Load("data/DawnLike_3/Objects/Tile.png");
+    predio->escadas = SDL_CreateTextureFromSurface(screen, tmp);
+    predio->escadasRect[UP_STAIR].w = 16;
+    predio->escadasRect[UP_STAIR].h = 16;
+    predio->escadasRect[UP_STAIR].x = 0;
+    predio->escadasRect[UP_STAIR].y = 16;
+
+    predio->escadasRect[DOWN_STAIR].w = 16;
+    predio->escadasRect[DOWN_STAIR].h = 16;
+    predio->escadasRect[DOWN_STAIR].x = 16;
+    predio->escadasRect[DOWN_STAIR].y = 16;
+    SDL_FreeSurface(tmp);
+
+    //Seta para cima
+    tmp = IMG_Load("data/DawnLike_3/GUI/GUI0.png");
+    predio->upArrow = SDL_CreateTextureFromSurface(screen, tmp);
+    predio->upArrowRect.w = 16;
+    predio->upArrowRect.h = 16;
+    predio->upArrowRect.x = 5*16;
+    predio->upArrowRect.y = 16;
+    SDL_FreeSurface(tmp);
+}
+
+void renderAndarPredio(SDL_Renderer *screen, Predio *predio, int andar, SDL_Rect aux){
+    int i, j;
+    for(i = 0; i < predio->h; i++){
+        for(j = 0; j < predio->w; j++){
+            aux.y = i * aux.h;
+            aux.x = j * aux.h;
+            char c = predio->pisos[andar].pontos[i][j];
+            //Coloca chão em tudo
+            SDL_RenderCopy(screen, predio->chaoSaida, &predio->chaoSaidaRect[PREDIO_CHAO], &aux);
+            //Coisas que ficam atrás do Jirobaldo
+            if(c == 'U'){
+                SDL_RenderCopy(screen, predio->escadas, &predio->escadasRect[UP_STAIR], &aux);
+            }else if(c == 'D'){
+                SDL_RenderCopy(screen, predio->escadas, &predio->escadasRect[DOWN_STAIR], &aux);
+            }else if(c == 'E'){
+                SDL_RenderCopy(screen, predio->escadas, &predio->escadasRect[DOWN_STAIR], &aux);
+                SDL_RenderCopy(screen, predio->upArrow, &predio->upArrowRect, &aux);
+            }else if(c == '#'){
+                SDL_RenderCopy(screen, predio->paredes, &predio->paredesRect[TOP_WALL], &aux);
+            }
+
+            //Coloca o Jirobaldo
+            if(predio->jirobaldo.x == i && predio->jirobaldo.y == j){
+                renderJirobaldo(screen, &predio->jirobaldo, aux);
+            }
+
+            //Coisas que ficam na frente do Jirobaldo
+            if(c == 'T'){
+                SDL_RenderCopy(screen, predio->torneira, &predio->torneiraRect, &aux);
+            }else if(c == 'F'){
+                predio->frame = (predio->frame + 1) % 5;
+                SDL_RenderCopy(screen, predio->fogo, &predio->fogoRect[predio->frame], &aux);
+            }else if(c == 'S'){
+                SDL_RenderCopy(screen, predio->chaoSaida, &predio->chaoSaidaRect[PREDIO_SAIDA], &aux);
+            }
+        }
+    }
 }

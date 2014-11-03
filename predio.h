@@ -2,6 +2,7 @@
 #define PREDIO_H_INCLUDED
 
 #include "jirobaldo.h"
+//Definições para os retângulos das texturas
 #define PREDIO_CHAO 0
 #define PREDIO_SAIDA 0
 #define LEFT_WALL 0
@@ -9,6 +10,8 @@
 #define TOP_WALL 2
 #define RIGHT_TOP_WALL 3
 #define RIGHT_WALL 4
+#define UP_STAIR 0
+#define DOWN_STAIR 1
 
 typedef struct{
 	char **pontos;
@@ -20,8 +23,8 @@ typedef struct{
 	int altura, w, h;
 	Jirobaldo jirobaldo;
 	int frame; //para animar o fogo
-	SDL_Texture *chaoSaida, *paredes, *fogo, *escadas, *torneira;
-	SDL_Rect chaoSaidaRect[2], paredesRect[5], fogoRect[5], escadasRect[3], torneiraRect;
+	SDL_Texture *chaoSaida, *paredes, *fogo, *escadas, *torneira, *upArrow;
+	SDL_Rect chaoSaidaRect[2], paredesRect[5], fogoRect[5], escadasRect[2], torneiraRect, upArrowRect;
 }Predio;
 
 //Inicia o predio, retorna false caso tenha ocorrido algum erro
@@ -37,7 +40,6 @@ bool isPontoNoAndar(Pavimento *pavimento, int x, int y);
 //Retorna true caso o ponto esteja no prédio, false caso contrário
 bool isPontoNoPredio(Predio *predio, int x, int y, int z);
 //Mostra, graficamente, um andar do prédio
-void renderAndarPredio(Pavimento *pavimento);
-
+void renderAndarPredio(SDL_Renderer *screen, Predio *predio, int andar, SDL_Rect aux);
 
 #endif
