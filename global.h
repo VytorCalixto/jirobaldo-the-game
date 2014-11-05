@@ -13,6 +13,11 @@
 SDL_Window *window;
 SDL_Renderer *screen;
 
+//Textos e fontes
+SDL_Texture *baldesText, *movesText;
+TTF_Font *titleFont;
+SDL_Rect baldesRect, movesRect;
+
 //Viewports
 SDL_Rect infoBarViewport;
 

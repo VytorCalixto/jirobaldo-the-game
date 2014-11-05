@@ -178,7 +178,7 @@ void renderAndarPredio(SDL_Renderer *screen, Predio *predio, int andar, SDL_Rect
             }
 
             //Coloca o Jirobaldo
-            if(predio->jirobaldo.x == i && predio->jirobaldo.y == j){
+            if(predio->jirobaldo.x == i && predio->jirobaldo.y == j && predio->jirobaldo.z == andar){
                 renderJirobaldo(screen, &predio->jirobaldo, aux);
             }
 

@@ -14,3 +14,5 @@ data/*
 *.out
 main
 fogo2
+.nfs*
+avaliacao/
