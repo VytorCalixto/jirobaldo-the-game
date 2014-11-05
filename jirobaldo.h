@@ -11,7 +11,7 @@ typedef struct{
 	int x, y, z; //Posições atuais
 	int baldes; //Baldes atuais
 	int MAX_BALDES; //Qtd máxima de baldes
-	int frame, face;
+	int frame, face; //Animação
 	bool isAnimating;
 	SDL_Texture *texture;
 	SDL_Rect jirobaldoRect[4][9];

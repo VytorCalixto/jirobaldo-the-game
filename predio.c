@@ -172,7 +172,14 @@ void renderAndarPredio(SDL_Renderer *screen, Predio *predio, int andar, SDL_Rect
                 SDL_RenderCopy(screen, predio->escadas, &predio->escadasRect[DOWN_STAIR], &aux);
             }else if(c == 'E'){
                 SDL_RenderCopy(screen, predio->escadas, &predio->escadasRect[DOWN_STAIR], &aux);
+                
+                aux.h=(aux.h/2);
+                aux.w=(aux.w/2);
+                aux.x+=aux.w/2;
                 SDL_RenderCopy(screen, predio->upArrow, &predio->upArrowRect, &aux);
+                aux.x-=aux.w/2;
+                aux.h=(aux.h*2);
+                aux.w=aux.h;
             }else if(c == '#'){
                 SDL_RenderCopy(screen, predio->paredes, &predio->paredesRect[TOP_WALL], &aux);
             }
@@ -192,4 +199,8 @@ void renderAndarPredio(SDL_Renderer *screen, Predio *predio, int andar, SDL_Rect
             }
         }
     }
+}
+
+bool isPontoNoAndar(Pavimento *pavimento, int x, int y){
+    return (x >= 0) && (x < pavimento->h) && (y >= 0) && (y < pavimento->w);
 }
