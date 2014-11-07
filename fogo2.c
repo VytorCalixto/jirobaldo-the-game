@@ -20,12 +20,12 @@ void fimJogo();
 //Lida com os eventos de teclado durante o jogo
 void validaEventos(SDL_Event event);
 bool jirobaldoValido();
+void renderText(TTF_Font *fonte, char *texto, SDL_Rect aux, SDL_Color cor, int align);
 
 int main(int argc, char **argv){
     bool quit = false;
     SDL_Event event;
     SDL_Rect aux;
-    SDL_Surface *tmp;
 
     //Lê os parâmetros da linha de comando
     lerParametros(argc, argv);
@@ -57,6 +57,7 @@ int main(int argc, char **argv){
     titleFont = TTF_OpenFont("data/fonts/Plane-Crash.ttf", 48);
 
     //Se for modo resolvedor gera a solução
+
     // TODO: gerar solução
 
     /*
@@ -71,23 +72,18 @@ int main(int argc, char **argv){
         SDL_RenderClear(screen);
 
         //Renderiza a barra de status
+        SDL_RenderSetViewport(screen, &infoBarViewport);
         aux.h = INFO_BAR_HEIGHT;
-        aux.w = baldesRect.w/2;
         aux.x = 0;
         aux.y = 0;
         //TODO: colocar a renderização da barra numa função
         char baldes[20];
         sprintf(baldes, "baldes: %d/%d", predio.jirobaldo.baldes, predio.jirobaldo.MAX_BALDES);
-        tmp = TTF_RenderUTF8_Solid(titleFont, baldes, (SDL_Color) {200,200,200});
-        baldesText = SDL_CreateTextureFromSurface(screen, tmp);
-        baldesRect.w = tmp->w;
-        baldesRect.h = tmp->h;
-        baldesRect.x = 0;
-        baldesRect.y = 0;
-        SDL_FreeSurface(tmp);
-        SDL_RenderSetViewport(screen, &infoBarViewport);
-        SDL_RenderCopy(screen, baldesText, &baldesRect, &aux);
-        
+        renderText(titleFont, baldes, aux, (SDL_Color) {200, 200, 200}, 0);
+        char moves[20];
+        sprintf(moves, "moves: %d", passos);
+        renderText(titleFont, moves, aux, (SDL_Color) {200, 200, 200}, 2);
+
         //Renderiza o 'jogo' principal
         aux.h = gameViewport.h/predio.h;
         aux.w = aux.h;
@@ -182,6 +178,7 @@ bool iniciaSDL(){
 void fimJogo(){
     SDL_DestroyRenderer(screen);
     SDL_DestroyWindow(window);
+    TTF_CloseFont(titleFont);
     TTF_Quit();
     IMG_Quit();
     SDL_Quit();
@@ -200,6 +197,8 @@ void validaEventos(SDL_Event event){
                     predio.jirobaldo.y--;
                     if(jirobaldoValido()){
                         predio.jirobaldo.face = FACE_WEST;
+                        predio.jirobaldo.isAnimating = true;
+                        passos++;
                     }else{
                         predio.jirobaldo.y++;
                     }
@@ -208,6 +207,8 @@ void validaEventos(SDL_Event event){
                     predio.jirobaldo.y++;
                     if(jirobaldoValido()){
                         predio.jirobaldo.face = FACE_EAST;
+                        predio.jirobaldo.isAnimating = true;
+                        passos++;
                     }else{
                         predio.jirobaldo.y--;
                     }
@@ -216,6 +217,8 @@ void validaEventos(SDL_Event event){
                     predio.jirobaldo.x--;
                     if(jirobaldoValido()){
                         predio.jirobaldo.face = FACE_NORTH;
+                        predio.jirobaldo.isAnimating = true;
+                        passos++;
                     }else{
                         predio.jirobaldo.x++;
                     }
@@ -224,6 +227,8 @@ void validaEventos(SDL_Event event){
                     predio.jirobaldo.x++;
                     if(jirobaldoValido()){
                         predio.jirobaldo.face = FACE_SOUTH;
+                        predio.jirobaldo.isAnimating = true;
+                        passos++;
                     }else{
                         predio.jirobaldo.x--;
                     }
@@ -232,12 +237,14 @@ void validaEventos(SDL_Event event){
                     if(predio.pisos[z].pontos[x][y] == 'U'
                         || predio.pisos[z].pontos[x][y] == 'E'){
                         predio.jirobaldo.z++;
+                        passos++;
                     }
                     break;
                 case SDLK_z:
                     if(predio.pisos[z].pontos[x][y] == 'D'
                         || predio.pisos[z].pontos[x][y] == 'E'){
                         predio.jirobaldo.z--;
+                        passos++;
                     }
                     break;
                 case SDLK_SPACE:
@@ -245,6 +252,8 @@ void validaEventos(SDL_Event event){
                         predio.jirobaldo.baldes++;
                         if(predio.jirobaldo.baldes > predio.jirobaldo.MAX_BALDES){
                             predio.jirobaldo.baldes--;
+                        }else{
+                            passos++;
                         }
                     }
                     break;
@@ -267,8 +276,31 @@ bool jirobaldoValido(){
                 return false;
             }
         }
-        return true;
     }
-    return false;
-    
+
+    return (isPontoNoAndar(&predio.pisos[z], x, y))
+        && (predio.pisos[z].pontos[x][y] != '#'); 
+}
+
+void renderText(TTF_Font *fonte, char *texto, SDL_Rect aux, SDL_Color cor, int align){
+    SDL_Surface *tmp;
+    SDL_Texture *textoTex;
+    SDL_Rect textoRect;
+
+    tmp = TTF_RenderUTF8_Solid(fonte, texto, cor);
+    textoTex = SDL_CreateTextureFromSurface(screen, tmp);
+    textoRect.w = tmp->w;
+    textoRect.h = tmp->h;
+    textoRect.x = 0;
+    textoRect.y = 0;
+    aux.w = textoRect.w/2;
+    if(align == 1){
+        aux.x = (SCREEN_WIDTH + aux.w)/2;
+    }else if(align == 2){
+        aux.x = SCREEN_WIDTH - aux.w;
+    }
+    SDL_RenderCopy(screen, textoTex, &textoRect, &aux);
+    SDL_FreeSurface(tmp);
+
+    SDL_DestroyTexture(textoTex);
 }

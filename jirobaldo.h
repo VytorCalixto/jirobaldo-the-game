@@ -8,7 +8,7 @@
 #define FACE_EAST 3
 
 typedef struct{
-	int x, y, z; //Posições atuais
+	int x, y, z; //Posição atuais
 	int baldes; //Baldes atuais
 	int MAX_BALDES; //Qtd máxima de baldes
 	int frame, face; //Animação

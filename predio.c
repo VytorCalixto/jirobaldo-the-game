@@ -157,14 +157,21 @@ void carregarTexturasPredio(SDL_Renderer *screen, Predio *predio){
 
 void renderAndarPredio(SDL_Renderer *screen, Predio *predio, int andar, SDL_Rect aux){
     int i, j;
+    bool isJirobaldo;
     predio->frame++;
     for(i = 0; i < predio->h; i++){
         for(j = 0; j < predio->w; j++){
             aux.y = i * aux.h;
             aux.x = j * aux.h;
-            char c = predio->pisos[andar].pontos[i][j];
-            //Coloca chão em tudo
             SDL_RenderCopy(screen, predio->chaoSaida, &predio->chaoSaidaRect[PREDIO_CHAO], &aux);
+        }
+    }
+    for(i = 0; i < predio->h; i++){
+        for(j = 0; j < predio->w; j++){
+            isJirobaldo = false;
+            aux.y = i * aux.h;
+            aux.x = j * aux.h;
+            char c = predio->pisos[andar].pontos[i][j];
             //Coisas que ficam atrás do Jirobaldo
             if(c == 'U'){
                 SDL_RenderCopy(screen, predio->escadas, &predio->escadasRect[UP_STAIR], &aux);
@@ -186,13 +193,26 @@ void renderAndarPredio(SDL_Renderer *screen, Predio *predio, int andar, SDL_Rect
 
             //Coloca o Jirobaldo
             if(predio->jirobaldo.x == i && predio->jirobaldo.y == j && predio->jirobaldo.z == andar){
+                isJirobaldo = true;
+                if(predio->jirobaldo.isAnimating){
+                    int face = predio->jirobaldo.face;
+                    int dist = aux.h/8; //pixels que o jirobaldo anda a cada frame
+                    if(face == FACE_NORTH || face == FACE_SOUTH){
+                        face == FACE_NORTH ? (aux .y = aux.y + aux.h - (predio->jirobaldo.frame * dist)) 
+                            : (aux.y = aux.y - aux.h + (predio->jirobaldo.frame * dist));
+                    }else{
+                        // aux.x = (aux.x - aux.h);
+                        face == FACE_WEST ? (aux.x = aux.x + aux.h - (predio->jirobaldo.frame * dist))
+                            : (aux.x = aux.x - aux.h + (predio->jirobaldo.frame * 4));
+                    }
+                }
                 renderJirobaldo(screen, &predio->jirobaldo, aux);
             }
 
             //Coisas que ficam na frente do Jirobaldo
             if(c == 'T'){
                 SDL_RenderCopy(screen, predio->torneira, &predio->torneiraRect, &aux);
-            }else if(c == 'F'){
+            }else if(c == 'F' && !isJirobaldo){
                 SDL_RenderCopy(screen, predio->fogo, &predio->fogoRect[predio->frame % 5], &aux);
             }else if(c == 'S'){
                 SDL_RenderCopy(screen, predio->chaoSaida, &predio->chaoSaidaRect[PREDIO_SAIDA], &aux);

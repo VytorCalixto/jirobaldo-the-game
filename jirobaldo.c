@@ -30,10 +30,11 @@ void carregarTexturasJirobaldo(SDL_Renderer *screen, Jirobaldo *jirobaldo){
 }	
 
 void renderJirobaldo(SDL_Renderer *screen, Jirobaldo *jirobaldo, SDL_Rect aux){
-	if(jirobaldo->isAnimating){ 
-		jirobaldo->frame = (jirobaldo->frame + 1) % 9;
+	if(jirobaldo->isAnimating && jirobaldo->frame < 8){ 
+		jirobaldo->frame = jirobaldo->frame + 1;
 	}else{
 		jirobaldo->frame = 0;
+		jirobaldo->isAnimating = false;
 	}
 	SDL_Rect jiroRect;
 	jiroRect = jirobaldo->jirobaldoRect[jirobaldo->face][jirobaldo->frame];

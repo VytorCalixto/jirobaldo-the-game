@@ -5,8 +5,8 @@
 #define GLOBAL_H_INCLUDED
 
 //Dimensões da tela
-#define SCREEN_WIDTH 640
-#define SCREEN_HEIGHT 480
+#define SCREEN_WIDTH 800
+#define SCREEN_HEIGHT 600
 #define INFO_BAR_HEIGHT 32
 
 //Janela e Renderer
@@ -30,6 +30,7 @@ SDL_Rect downMapViewport;
 int passosPorSegundo = 0;
 bool isModoResolvedor = false;
 char *arquivo;
+int passos = 0;
 
 #include "predio.h"
 Predio predio;
