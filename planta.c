@@ -1,7 +1,9 @@
-//Serve para marcar os vértices em que já passamos. 0 caso não tenha passado por lá.
-typedef struct{
-    int *** planta;
-}Planta;
+#include <stdio.h>
+#include <stdbool.h>
+#include <SDL2/SDL.h> 
+#include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
+#include "planta.h"
 
 //Aloca a planta com o mesmo tamanho do prédio e define todas as posições como 0
 void iniciaPlanta(Planta *planta, Predio *predio){

@@ -29,9 +29,9 @@ bool lePredio(Predio *predio, FILE *file){
             for(k = 0; k < predio->w; k++){
                 fscanf(file, " %c", &predio->pisos[i].pontos[j][k]);
                 if(predio->pisos[i].pontos[j][k] == 'J'){
+                    predio->jirobaldo.z = i;
                     predio->jirobaldo.x = j;
                     predio->jirobaldo.y = k;
-                    predio->jirobaldo.z = i;
                 }
             }
         }
@@ -203,10 +203,12 @@ void renderAndarPredio(SDL_Renderer *screen, Predio *predio, int andar, SDL_Rect
                     }else{
                         // aux.x = (aux.x - aux.h);
                         face == FACE_WEST ? (aux.x = aux.x + aux.h - (predio->jirobaldo.frame * dist))
-                            : (aux.x = aux.x - aux.h + (predio->jirobaldo.frame * 4));
+                            : (aux.x = aux.x - aux.h + (predio->jirobaldo.frame * dist));
                     }
                 }
                 renderJirobaldo(screen, &predio->jirobaldo, aux);
+                aux.y = i * aux.h;
+                aux.x = j * aux.h;
             }
 
             //Coisas que ficam na frente do Jirobaldo
@@ -223,4 +225,8 @@ void renderAndarPredio(SDL_Renderer *screen, Predio *predio, int andar, SDL_Rect
 
 bool isPontoNoAndar(Pavimento *pavimento, int x, int y){
     return (x >= 0) && (x < pavimento->h) && (y >= 0) && (y < pavimento->w);
+}
+
+bool isPontoNoPredio(Predio *predio, int x, int y, int z){
+    return (z >= 0) && (z < predio->altura) && isPontoNoAndar(&predio->pisos[z], x, y);
 }

@@ -1,7 +1,0 @@
-#ifndef SCREEN_H_INCLUDED
-#define SCREEN_H_INCLUDED
-
-#define SCREEN_WIDTH 640
-#define SCREEN_HEIGHT 480
-
-#endif

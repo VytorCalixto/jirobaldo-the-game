@@ -1,19 +1,9 @@
-typedef struct Vertice{
-  char valor;
-  int x, y, z
-  int baldes; //baldes com água naquele vértice
-  int tempo; //tempo que girobaldo levou até chegar nesse vértice
-  struct Vertice *anterior; //Vertice que "chegou" neste vértice
-}Vertice;
-
-typedef struct ElementoFila{
-  Vertice vertice;
-  struct ElmentoFila *prox;
-}ElementoFila;
-
-typedef struct{
-  ElementoFila *frente, *final;
-}Fila;
+#include <stdio.h>
+#include <stdbool.h>
+#include <SDL2/SDL.h> 
+#include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
+#include "fila.h"
 
 void iniciaFila(Fila *fila){
   fila->frente = (ElementoFila *) malloc(sizeof(ElementoFila)); //Primeiro nodo da fila é nodo cabeça
