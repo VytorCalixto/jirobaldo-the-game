@@ -10,7 +10,7 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 #include "predio.h"
-#include "buscaLargura.h"
+#include "libpredio.h"
 #include "global.h"
 
 //Lê os parâmetros passados na linha de comando
@@ -23,6 +23,7 @@ void validaEventos(SDL_Event event);
 bool jirobaldoValido();
 void renderText(TTF_Font *fonte, char *texto, SDL_Rect aux, SDL_Color cor, int align);
 bool isSaida();
+void novoEdificio(Edificio *edificio);
 
 int main(int argc, char **argv){
     bool quit = false;
@@ -42,12 +43,19 @@ int main(int argc, char **argv){
         puts("ERRO: Não foi possível criar o prédio. O arquivo é válido?");
         return 1;
     }
+    /*
+    * Edificio é a "antiga" struct Predio na solução do Flávio.
+    * 
+    */
+    Edificio edificio;
+    novoEdificio(&edificio);
     
     //Inicia SDL
     if(!iniciaSDL()){
         puts("ERRO: não foi possível iniciar o SDL");
         return 1;
     }
+
 
     window = SDL_CreateWindow("Jirobaldo: Sobrevivente", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
     screen = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
@@ -59,9 +67,14 @@ int main(int argc, char **argv){
     titleFont = TTF_OpenFont("data/fonts/Plane-Crash.ttf", 48);
 
     //Se for modo resolvedor gera a solução
-    Vertice raiz = pontoParaVertice(predio, predio.jirobaldo.x, predio.jirobaldo.y, predio.jirobaldo.z);
-    int tempo = buscaEmLargura(predio, &raiz);
-    printf("%d\n", tempo);
+    resp = predio_resolve(&edificio);
+    // printf("%d\n", resp->len);
+    // int i;
+    // for (i = 0; i < resp->len; i++) {
+    //     printf("%d ", resp->p[i]);
+    // }
+    // putchar('\n');
+    
     /*
      * Loop princpial:
      *     Render do mapa
@@ -124,7 +137,7 @@ int main(int argc, char **argv){
         SDL_Delay(1000/30);
     }
 
-    //fimJogo();
+    //fimJogo(); //Animação de fim de jogo
     fechaSDL();
     return 0;
 }
@@ -195,7 +208,93 @@ void validaEventos(SDL_Event event){
     int y = predio.jirobaldo.y;
     int z = predio.jirobaldo.z;
     if(isModoResolvedor && passosPorSegundo == 0){
-        //TODO: Eventos para o modo resolvedor
+        if(event.type == SDL_KEYDOWN){
+            int passo = resp->p[passos];
+            int tecla = event.key.keysym.sym;
+            //FIXME: bug na seta da esquerda
+            switch(passo){
+                case PASSO_CIMA:
+                    if(tecla == SDLK_RIGHT){
+                        predio.jirobaldo.x--;
+                        passos++;
+                        predio.jirobaldo.face = FACE_NORTH;
+                        predio.jirobaldo.isAnimating = true;
+                    }else if(tecla == SDLK_LEFT){
+                        predio.jirobaldo.x++;
+                        passos--;
+                        predio.jirobaldo.face = FACE_SOUTH;
+                        predio.jirobaldo.isAnimating = true;
+                    }
+                    break;
+                case PASSO_BAIXO:
+                    if(tecla == SDLK_RIGHT){
+                        predio.jirobaldo.x++;
+                        passos++;
+                        predio.jirobaldo.face = FACE_SOUTH;
+                        predio.jirobaldo.isAnimating = true;
+                    }else if(tecla == SDLK_LEFT){
+                        predio.jirobaldo.x--;
+                        passos--;
+                        predio.jirobaldo.face = FACE_NORTH;
+                        predio.jirobaldo.isAnimating = true;
+                    }
+                    break;
+                case PASSO_ESQUERDA:
+                    if(tecla == SDLK_RIGHT){
+                        predio.jirobaldo.y--;
+                        passos++;
+                        predio.jirobaldo.face = FACE_WEST;
+                        predio.jirobaldo.isAnimating = true;
+                    }else if(tecla == SDLK_LEFT){
+                        predio.jirobaldo.y++;
+                        passos--;
+                        predio.jirobaldo.face = FACE_EAST;
+                        predio.jirobaldo.isAnimating = true;
+                    }
+                    break;
+                case PASSO_DIREITA:
+                    if(tecla == SDLK_RIGHT){
+                        predio.jirobaldo.y++;
+                        passos++;
+                        predio.jirobaldo.face = FACE_EAST;
+                        predio.jirobaldo.isAnimating = true;
+                    }else if(tecla == SDLK_LEFT){
+                        predio.jirobaldo.y--;
+                        passos--;
+                        predio.jirobaldo.face = FACE_WEST;
+                        predio.jirobaldo.isAnimating = true;
+                    }
+                    break;
+                case PASSO_SOBE:
+                    if(tecla == SDLK_RIGHT){
+                        predio.jirobaldo.z++;
+                        passos++;
+                    }else if(tecla == SDLK_LEFT){
+                        predio.jirobaldo.z--;
+                        passos--;
+                    }
+                    break;
+                case PASSO_DESCE:
+                    if(tecla == SDLK_RIGHT){
+                        predio.jirobaldo.z--;
+                        passos++;
+                    }else if(tecla == SDLK_LEFT){
+                        predio.jirobaldo.z++;
+                        passos--;
+                    }
+                    break;
+                case PASSO_ENCHE:
+                    if(tecla == SDLK_RIGHT){
+                        predio.jirobaldo.baldes++;
+                        passos++;
+                    }else if(tecla == SDLK_LEFT){
+                        predio.jirobaldo.baldes--;
+                        passos--;
+                    }
+                    break;
+            }
+            jirobaldoValido();
+        }
     }else{
         if(event.type == SDL_KEYDOWN){
             switch(event.key.keysym.sym){
@@ -316,4 +415,16 @@ bool isSaida(){
     int y = predio.jirobaldo.y;
     int z = predio.jirobaldo.z;
     return (predio.pisos[z].pontos[x][y] == 'S');
+}
+
+void novoEdificio(Edificio *edificio){
+    int i, j;
+    FILE *file = fopen(arquivo, "r");
+    fscanf(file, "%d %d %d %d", &(edificio->A), &(edificio->W), &(edificio->H), &(edificio->B));
+    for(i = 0; i < edificio->A; i++){
+        for(j = 0; j < edificio->H; j++){
+            fscanf(file, "%s", edificio->m[i][j]);
+        }
+    }
+    fclose(file);
 }

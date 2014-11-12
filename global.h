@@ -27,6 +27,7 @@ SDL_Rect topMapViewport;
 
 SDL_Rect downMapViewport;
 
+Passos *resp;
 int passosPorSegundo = 0;
 bool isModoResolvedor = false;
 char *arquivo;
