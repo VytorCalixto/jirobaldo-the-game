@@ -160,6 +160,7 @@ void carregarTexturasPredio(SDL_Renderer *screen, Predio *predio){
 }
 
 void renderAndarPredio(SDL_Renderer *screen, Predio *predio, int andar, SDL_Rect aux){
+    //TODO: Iluminação "spot" (círculo ao redor do fogo) ou degradê nos vizinhos
     int i, j;
     bool isJirobaldo;
     predio->frame++;

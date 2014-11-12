@@ -46,9 +46,9 @@ int main(int argc, char **argv){
         puts("ERRO: Não foi possível criar o prédio. O arquivo é válido?");
         return 1;
     }
+
     /*
     * Edificio é a "antiga" struct Predio na solução do Flávio.
-    * 
     */
     Edificio edificio;
     novoEdificio(&edificio);
@@ -66,7 +66,7 @@ int main(int argc, char **argv){
     //Splash screen e carregar texturas
     carregarTexturasPredio(screen, &predio);
     carregarTexturasJirobaldo(screen, &predio.jirobaldo);
-
+    //TODO: SplashScreen
     titleFont = TTF_OpenFont("data/fonts/Plane-Crash.ttf", 48);
 
     //Se for modo resolvedor gera a solução
@@ -179,7 +179,7 @@ int main(int argc, char **argv){
     }
     Mix_PauseMusic();
 
-    //fimJogo(); //Animação de fim de jogo
+    //TODO: fimJogo(); //Animação de fim de jogo
     fechaSDL();
     return 0;
 }
