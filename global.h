@@ -32,6 +32,7 @@ int passosPorSegundo = 0;
 bool isModoResolvedor = false;
 char *arquivo;
 int passos = 0;
+Mix_Music *titleTheme;
 
 #include "predio.h"
 Predio predio;

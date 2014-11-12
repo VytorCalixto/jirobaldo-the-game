@@ -9,6 +9,7 @@
 #include <SDL2/SDL.h> 
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_mixer.h>
 #include "predio.h"
 #include "libpredio.h"
 #include "global.h"
@@ -29,10 +30,12 @@ int main(int argc, char **argv){
     bool quit = false;
     SDL_Event event;
     SDL_Rect aux;
+    int waitTime = 0;
+    Uint32 startTime = 0; //Tempo inicial
 
     //Lê os parâmetros da linha de comando
     lerParametros(argc, argv);
-
+    waitTime = passosPorSegundo > 0 ? (1000/passosPorSegundo): 0;
     //Lê o arquivo do prédio
     if(arquivo == NULL){
         puts("ERRO: Nenhum arquivo foi especificado.");
@@ -68,12 +71,9 @@ int main(int argc, char **argv){
 
     //Se for modo resolvedor gera a solução
     resp = predio_resolve(&edificio);
-    // printf("%d\n", resp->len);
-    // int i;
-    // for (i = 0; i < resp->len; i++) {
-    //     printf("%d ", resp->p[i]);
-    // }
-    // putchar('\n');
+    if(resp->len < 0){
+        return 1;
+    }
     
     /*
      * Loop princpial:
@@ -82,6 +82,8 @@ int main(int argc, char **argv){
      *         Se for simulador lida com a jogabilidade
      *         Se for resolvedor, avança/retrocede um passo
      */
+    titleTheme = Mix_LoadMUS("data/audio/bost-imagine-the-fire.ogg");
+    Mix_PlayMusic(titleTheme, -1);
     while(!quit){
         SDL_SetRenderDrawColor(screen, 0, 0, 0, 255);
         SDL_RenderClear(screen);
@@ -125,17 +127,57 @@ int main(int argc, char **argv){
 
         SDL_RenderPresent(screen);
 
+        quit = isSaida() ? true : false;
         while(SDL_PollEvent(&event)){
             if(event.type == SDL_QUIT){
                 quit = true;
             }else{
                 //Valida eventos
                 validaEventos(event);
-                quit = isSaida() ? true : false;
             }
         }
+        if(isModoResolvedor && passosPorSegundo > 0 
+            && (SDL_GetTicks() - startTime >= waitTime)){
+            startTime = SDL_GetTicks();
+            int passo = resp->p[passos];
+            passos++;
+            switch(passo){
+                case PASSO_CIMA:
+                    predio.jirobaldo.face = FACE_NORTH;
+                    predio.jirobaldo.isAnimating = true;
+                    predio.jirobaldo.x--;
+                    break;
+                case PASSO_BAIXO:
+                    predio.jirobaldo.face =FACE_SOUTH;
+                    predio.jirobaldo.isAnimating = true;
+                    predio.jirobaldo.x++;
+                    break;
+                case PASSO_ESQUERDA:
+                    predio.jirobaldo.face = FACE_WEST;
+                    predio.jirobaldo.isAnimating = true;
+                    predio.jirobaldo.y--;
+                    break;
+                case PASSO_DIREITA:
+                    predio.jirobaldo.face = FACE_EAST;
+                    predio.jirobaldo.isAnimating = true;
+                    predio.jirobaldo.y++;
+                    break;
+                case PASSO_SOBE:
+                    predio.jirobaldo.z++;
+                    break;
+                case PASSO_DESCE:
+                    predio.jirobaldo.z--;
+                    break;
+                case PASSO_ENCHE:
+                    predio.jirobaldo.baldes++;
+                    break;
+            }
+            jirobaldoValido();
+        }
+        //TODO: Arrumar
         SDL_Delay(1000/30);
     }
+    Mix_PauseMusic();
 
     //fimJogo(); //Animação de fim de jogo
     fechaSDL();
@@ -171,6 +213,10 @@ bool iniciaSDL(){
         return false;
     }
 
+    if(Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 1024) == -1){
+        return false;
+    }
+
     //Define as viewports
     infoBarViewport.x = 0;
     infoBarViewport.y = 0;
@@ -195,9 +241,11 @@ bool iniciaSDL(){
 }
 
 void fechaSDL(){
+    Mix_FreeMusic(titleTheme);
     SDL_DestroyRenderer(screen);
     SDL_DestroyWindow(window);
     TTF_CloseFont(titleFont);
+    Mix_CloseAudio();
     TTF_Quit();
     IMG_Quit();
     SDL_Quit();
@@ -208,89 +256,49 @@ void validaEventos(SDL_Event event){
     int y = predio.jirobaldo.y;
     int z = predio.jirobaldo.z;
     if(isModoResolvedor && passosPorSegundo == 0){
-        if(event.type == SDL_KEYDOWN){
-            int passo = resp->p[passos];
+        if(event.type == SDL_KEYDOWN && (event.key.keysym.sym == SDLK_RIGHT || event.key.keysym.sym == SDLK_LEFT)){
+            int passo;
             int tecla = event.key.keysym.sym;
-            //FIXME: bug na seta da esquerda
+            if(tecla == SDLK_RIGHT){
+                passo = resp->p[passos];
+                if(passos < resp->len)
+                    passos++;
+            }else if(tecla == SDLK_LEFT){
+                if(passos > 0)
+                    passos--;
+                else
+                    return;
+                passo = resp->p[passos];
+            }
             switch(passo){
                 case PASSO_CIMA:
-                    if(tecla == SDLK_RIGHT){
-                        predio.jirobaldo.x--;
-                        passos++;
-                        predio.jirobaldo.face = FACE_NORTH;
-                        predio.jirobaldo.isAnimating = true;
-                    }else if(tecla == SDLK_LEFT){
-                        predio.jirobaldo.x++;
-                        passos--;
-                        predio.jirobaldo.face = FACE_SOUTH;
-                        predio.jirobaldo.isAnimating = true;
-                    }
+                    predio.jirobaldo.face = (tecla == SDLK_RIGHT) ? FACE_NORTH : FACE_SOUTH;
+                    predio.jirobaldo.isAnimating = true;
+                    tecla == SDLK_RIGHT ? predio.jirobaldo.x-- : predio.jirobaldo.x++;
                     break;
                 case PASSO_BAIXO:
-                    if(tecla == SDLK_RIGHT){
-                        predio.jirobaldo.x++;
-                        passos++;
-                        predio.jirobaldo.face = FACE_SOUTH;
-                        predio.jirobaldo.isAnimating = true;
-                    }else if(tecla == SDLK_LEFT){
-                        predio.jirobaldo.x--;
-                        passos--;
-                        predio.jirobaldo.face = FACE_NORTH;
-                        predio.jirobaldo.isAnimating = true;
-                    }
+                    predio.jirobaldo.face = (tecla == SDLK_RIGHT) ? FACE_SOUTH : FACE_NORTH;
+                    predio.jirobaldo.isAnimating = true;
+                    tecla == SDLK_RIGHT ? predio.jirobaldo.x++ : predio.jirobaldo.x--;
                     break;
                 case PASSO_ESQUERDA:
-                    if(tecla == SDLK_RIGHT){
-                        predio.jirobaldo.y--;
-                        passos++;
-                        predio.jirobaldo.face = FACE_WEST;
-                        predio.jirobaldo.isAnimating = true;
-                    }else if(tecla == SDLK_LEFT){
-                        predio.jirobaldo.y++;
-                        passos--;
-                        predio.jirobaldo.face = FACE_EAST;
-                        predio.jirobaldo.isAnimating = true;
-                    }
+                    predio.jirobaldo.face = (tecla == SDLK_RIGHT) ? FACE_WEST : FACE_EAST;
+                    predio.jirobaldo.isAnimating = true;
+                    tecla == SDLK_RIGHT ? predio.jirobaldo.y-- : predio.jirobaldo.y++;
                     break;
                 case PASSO_DIREITA:
-                    if(tecla == SDLK_RIGHT){
-                        predio.jirobaldo.y++;
-                        passos++;
-                        predio.jirobaldo.face = FACE_EAST;
-                        predio.jirobaldo.isAnimating = true;
-                    }else if(tecla == SDLK_LEFT){
-                        predio.jirobaldo.y--;
-                        passos--;
-                        predio.jirobaldo.face = FACE_WEST;
-                        predio.jirobaldo.isAnimating = true;
-                    }
+                    predio.jirobaldo.face = (tecla == SDLK_RIGHT) ? FACE_EAST : FACE_WEST;
+                    predio.jirobaldo.isAnimating = true;
+                    tecla == SDLK_RIGHT ? predio.jirobaldo.y++ : predio.jirobaldo.y--;
                     break;
                 case PASSO_SOBE:
-                    if(tecla == SDLK_RIGHT){
-                        predio.jirobaldo.z++;
-                        passos++;
-                    }else if(tecla == SDLK_LEFT){
-                        predio.jirobaldo.z--;
-                        passos--;
-                    }
+                    tecla == SDLK_RIGHT ? predio.jirobaldo.z++ : predio.jirobaldo.z--;
                     break;
                 case PASSO_DESCE:
-                    if(tecla == SDLK_RIGHT){
-                        predio.jirobaldo.z--;
-                        passos++;
-                    }else if(tecla == SDLK_LEFT){
-                        predio.jirobaldo.z++;
-                        passos--;
-                    }
+                    tecla == SDLK_RIGHT ? predio.jirobaldo.z-- : predio.jirobaldo.z++;
                     break;
                 case PASSO_ENCHE:
-                    if(tecla == SDLK_RIGHT){
-                        predio.jirobaldo.baldes++;
-                        passos++;
-                    }else if(tecla == SDLK_LEFT){
-                        predio.jirobaldo.baldes--;
-                        passos--;
-                    }
+                    tecla == SDLK_RIGHT ? predio.jirobaldo.baldes++ : predio.jirobaldo.baldes--;
                     break;
             }
             jirobaldoValido();
@@ -362,6 +370,13 @@ void validaEventos(SDL_Event event){
                         }
                     }
                     break;
+                case SDLK_RETURN:
+                    predio.jirobaldo.x = predio.jirobaldo.sx;
+                    predio.jirobaldo.y = predio.jirobaldo.sy;
+                    predio.jirobaldo.z = predio.jirobaldo.sz;
+                    predio.jirobaldo.baldes = 0;
+                    passos = 0;
+                    break;
             }
         }
     }
@@ -414,7 +429,8 @@ bool isSaida(){
     int x = predio.jirobaldo.x;
     int y = predio.jirobaldo.y;
     int z = predio.jirobaldo.z;
-    return (predio.pisos[z].pontos[x][y] == 'S');
+    bool animating = isModoResolvedor ? false : predio.jirobaldo.isAnimating;
+    return (predio.pisos[z].pontos[x][y] == 'S' && ! animating);
 }
 
 void novoEdificio(Edificio *edificio){

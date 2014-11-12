@@ -36,6 +36,10 @@ bool lePredio(Predio *predio, FILE *file){
             }
         }
     }
+    
+    predio->jirobaldo.sx = predio->jirobaldo.x;
+    predio->jirobaldo.sy = predio->jirobaldo.y;
+    predio->jirobaldo.sz = predio->jirobaldo.z;
 
     return true;
 }
@@ -161,8 +165,18 @@ void renderAndarPredio(SDL_Renderer *screen, Predio *predio, int andar, SDL_Rect
     predio->frame++;
     for(i = 0; i < predio->h; i++){
         for(j = 0; j < predio->w; j++){
+            isJirobaldo = false;
             aux.y = i * aux.h;
             aux.x = j * aux.h;
+            if(predio->jirobaldo.x == i && predio->jirobaldo.y == j){
+                isJirobaldo = true;
+            }
+            //Deixa o chão mais escuro
+            SDL_SetTextureColorMod(predio->chaoSaida, 100, 100, 100);
+            if(predio->pisos[andar].pontos[i][j] == 'F' && !isJirobaldo){
+                //Deixa o chão amarelado/alaranjado por causa do fogo
+                SDL_SetTextureColorMod(predio->chaoSaida, 150, 150, 100);
+            }
             SDL_RenderCopy(screen, predio->chaoSaida, &predio->chaoSaidaRect[PREDIO_CHAO], &aux);
         }
     }

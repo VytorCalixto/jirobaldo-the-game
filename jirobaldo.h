@@ -8,6 +8,7 @@
 #define FACE_EAST 3
 
 typedef struct{
+	int sx, sy, sz; //Posição inicial
 	int x, y, z; //Posição atuais
 	int baldes; //Baldes atuais
 	int MAX_BALDES; //Qtd máxima de baldes
