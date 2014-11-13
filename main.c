@@ -25,6 +25,7 @@ bool jirobaldoValido();
 void renderText(TTF_Font *fonte, char *texto, SDL_Rect aux, SDL_Color cor, int align);
 bool isSaida();
 void novoEdificio(Edificio *edificio);
+void splashScreen();
 
 int main(int argc, char **argv){
     bool quit = false;
@@ -63,11 +64,15 @@ int main(int argc, char **argv){
     window = SDL_CreateWindow("Jirobaldo: Sobrevivente", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
     screen = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
-    //Splash screen e carregar texturas
+    //Splash screen e carregar arquivos/texturas
     carregarTexturasPredio(screen, &predio);
     carregarTexturasJirobaldo(screen, &predio.jirobaldo);
-    //TODO: SplashScreen
     titleFont = TTF_OpenFont("data/fonts/Plane-Crash.ttf", 48);
+    water = Mix_LoadWAV("data/audio/water-splash.wav");
+    titleTheme = Mix_LoadMUS("data/audio/bost-imagine-the-fire.ogg");
+    fire = Mix_LoadWAV("data/audio/fire.wav");
+    Mix_PlayMusic(titleTheme, -1);
+    splashScreen();
 
     //Se for modo resolvedor gera a solução
     resp = predio_resolve(&edificio);
@@ -82,8 +87,6 @@ int main(int argc, char **argv){
      *         Se for simulador lida com a jogabilidade
      *         Se for resolvedor, avança/retrocede um passo
      */
-    titleTheme = Mix_LoadMUS("data/audio/bost-imagine-the-fire.ogg");
-    Mix_PlayMusic(titleTheme, -1);
     while(!quit){
         SDL_SetRenderDrawColor(screen, 0, 0, 0, 255);
         SDL_RenderClear(screen);
@@ -169,6 +172,7 @@ int main(int argc, char **argv){
                     predio.jirobaldo.z--;
                     break;
                 case PASSO_ENCHE:
+                    Mix_PlayChannel(-1, water, 0);
                     predio.jirobaldo.baldes++;
                     break;
             }
@@ -177,7 +181,7 @@ int main(int argc, char **argv){
         //TODO: Arrumar
         SDL_Delay(1000/30);
     }
-    Mix_PauseMusic();
+    Mix_HaltMusic();
 
     //TODO: fimJogo(); //Animação de fim de jogo
     fechaSDL();
@@ -213,7 +217,7 @@ bool iniciaSDL(){
         return false;
     }
 
-    if(Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 1024) == -1){
+    if(Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024) == -1){
         return false;
     }
 
@@ -298,6 +302,7 @@ void validaEventos(SDL_Event event){
                     tecla == SDLK_RIGHT ? predio.jirobaldo.z-- : predio.jirobaldo.z++;
                     break;
                 case PASSO_ENCHE:
+                    Mix_PlayChannel(-1, water, 0);
                     tecla == SDLK_RIGHT ? predio.jirobaldo.baldes++ : predio.jirobaldo.baldes--;
                     break;
             }
@@ -366,6 +371,7 @@ void validaEventos(SDL_Event event){
                         if(predio.jirobaldo.baldes > predio.jirobaldo.MAX_BALDES){
                             predio.jirobaldo.baldes--;
                         }else{
+                            Mix_PlayChannel(-1, water, 0);
                             passos++;
                         }
                     }
@@ -443,4 +449,47 @@ void novoEdificio(Edificio *edificio){
         }
     }
     fclose(file);
+}
+
+void splashScreen(){
+    SDL_Texture *title, *subtitle;
+    SDL_Rect titleRect, subtitleRect;
+    SDL_Surface *tmp;
+    Uint8 alpha = 0;
+
+    tmp = TTF_RenderUTF8_Solid(titleFont, "jirobaldo", (SDL_Color) {180, 0, 0});
+    title = SDL_CreateTextureFromSurface(screen, tmp);
+    SDL_SetTextureAlphaMod(title, alpha);
+    titleRect.w = tmp->w;    
+    titleRect.h = tmp->h;
+    titleRect.x = SCREEN_WIDTH/2 - titleRect.w/2;
+    titleRect.y = SCREEN_HEIGHT/2 - titleRect.h/2;
+    SDL_FreeSurface(tmp);
+
+    tmp = TTF_RenderUTF8_Solid(titleFont, "sobrevivente", (SDL_Color) {200, 200, 200});
+    subtitle = SDL_CreateTextureFromSurface(screen, tmp);
+    SDL_SetTextureAlphaMod(subtitle, alpha);
+    subtitleRect.w = tmp->w;    
+    subtitleRect.h = tmp->h;
+    subtitleRect.x = SCREEN_WIDTH/2 - subtitleRect.w/2;
+    subtitleRect.y = titleRect.y + subtitleRect.h;
+    SDL_FreeSurface(tmp);
+
+    while(alpha < 255){
+        SDL_SetRenderDrawColor(screen, 0, 0, 0, 255);
+        SDL_RenderClear(screen);
+        // SDL_RenderCopy(screen, bg, NULL, NULL);
+        SDL_RenderCopy(screen, title, NULL, &titleRect);
+        SDL_RenderCopy(screen, subtitle, NULL, &subtitleRect);
+        SDL_RenderPresent(screen);
+        
+        alpha+=3;
+        SDL_SetTextureAlphaMod(title, alpha);
+        SDL_SetTextureAlphaMod(subtitle, alpha);
+
+        SDL_Delay(1000/30);
+    }
+
+    SDL_DestroyTexture(title);
+    SDL_DestroyTexture(subtitle);
 }

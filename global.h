@@ -32,7 +32,10 @@ int passosPorSegundo = 0;
 bool isModoResolvedor = false;
 char *arquivo;
 int passos = 0;
+
+//Efeitos sonoros
 Mix_Music *titleTheme;
+Mix_Chunk  *fire = NULL, *water = NULL;
 
 #include "predio.h"
 Predio predio;
