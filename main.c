@@ -67,6 +67,11 @@ int main(int argc, char **argv){
     //Splash screen e carregar arquivos/texturas
     carregarTexturasPredio(screen, &predio);
     carregarTexturasJirobaldo(screen, &predio.jirobaldo);
+    aux.h = (predio.h >= predio.w) ? (gameViewport.h/predio.h) : (gameViewport.w/predio.w);
+    aux.w = aux.h;
+    aux.x = 0;
+    aux.y = 0;
+    gerarTexturasAndares(screen, &predio, aux);
     titleFont = TTF_OpenFont("data/fonts/Plane-Crash.ttf", 48);
     water = Mix_LoadWAV("data/audio/water-splash.wav");
     titleTheme = Mix_LoadMUS("data/audio/bost-imagine-the-fire.ogg");

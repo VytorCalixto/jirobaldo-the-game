@@ -5,11 +5,6 @@
 //Definições para os retângulos das texturas
 #define PREDIO_CHAO 0
 #define PREDIO_SAIDA 1
-#define LEFT_WALL 0
-#define LEFT_TOP_WALL 1
-#define TOP_WALL 2
-#define RIGHT_TOP_WALL 3
-#define RIGHT_WALL 4
 #define UP_STAIR 0
 #define DOWN_STAIR 1
 
@@ -24,7 +19,8 @@ typedef struct{
 	Jirobaldo jirobaldo;
 	int frame; //para animar o fogo
 	SDL_Texture *chaoSaida, *paredes, *fogo, *escadas, *torneira, *upArrow;
-	SDL_Rect chaoSaidaRect[2], paredesRect[5], fogoRect[5], escadasRect[2], torneiraRect, upArrowRect;
+	SDL_Texture **andares; //Texturas que guardam todo o andar
+	SDL_Rect chaoSaidaRect[2], paredeRect, fogoRect[5], escadasRect[2], torneiraRect, upArrowRect;
 }Predio;
 
 //Inicia o predio, retorna false caso tenha ocorrido algum erro
@@ -33,6 +29,8 @@ bool novoPredio(Predio *predio, char *arquivo);
 bool alocaPredio(Predio *predio);
 //Lê o arquivo que contém o prédio
 bool lePredio(Predio *predio, FILE *file);
+//Gera uma textura para cada andar, de forma que não é necessário ficar renderizando toda hora
+void gerarTexturasAndares(SDL_Renderer *screen, Predio *predio, SDL_Rect aux);
 //Carrega as texturas do predio
 void carregarTexturasPredio(SDL_Renderer *screen, Predio *predio);
 //Retorna true se o ponto está no andar
