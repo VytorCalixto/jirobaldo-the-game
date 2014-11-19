@@ -85,7 +85,7 @@ void gerarTexturasAndares(SDL_Renderer *screen, Predio *predio, SDL_Rect aux){
                 pos = predio->pisos[i].pontos[j][k];
                 aux.y = j * aux.h;
                 aux.x = k * aux.h;
-                if(pos == '.' || pos == 'J' || pos == 'F' || pos == 'T' || pos == 'S'){
+                if(pos == '.' || pos == 'J' || pos == 'F' || pos == 'T'){
                     SDL_SetTextureColorMod(predio->chaoSaida, 100, 100, 100);
                     SDL_RenderCopy(screen, predio->chaoSaida, &predio->chaoSaidaRect[PREDIO_CHAO], &aux);
                 }else if(pos == '#'){
@@ -96,14 +96,13 @@ void gerarTexturasAndares(SDL_Renderer *screen, Predio *predio, SDL_Rect aux){
                 }else if(pos == 'D'){
                     SDL_RenderCopy(screen, predio->escadas, &predio->escadasRect[DOWN_STAIR], &aux);
                 }else if(pos == 'E'){
-                    SDL_RenderCopy(screen, predio->escadas, &predio->escadasRect[DOWN_STAIR], &aux);
-                    aux.h=(aux.h/2);
-                    aux.w=(aux.w/2);
-                    aux.x+=aux.w/2;
-                    SDL_RenderCopy(screen, predio->upArrow, &predio->upArrowRect, &aux);
-                    aux.x-=aux.w/2;
-                    aux.h=(aux.h*2);
-                    aux.w=aux.h;
+                    SDL_RenderCopy(screen, predio->escadaCimaBaixo, &predio->escadasRect[UP_DOWN_STAIR], &aux);
+                }else if(pos == 'S'){
+                    SDL_RenderCopy(screen, predio->chaoSaida, &predio->chaoSaidaRect[PREDIO_SAIDA], &aux);
+                }
+
+                if(pos == 'T'){
+                    SDL_RenderCopy(screen, predio->torneira, &predio->torneiraRect, &aux);
                 }
             }
         }
@@ -173,13 +172,13 @@ void carregarTexturasPredio(SDL_Renderer *screen, Predio *predio){
     predio->escadasRect[DOWN_STAIR].y = 16;
     SDL_FreeSurface(tmp);
 
-    //Seta para cima
-    tmp = IMG_Load("data/DawnLike_3/GUI/GUI0.png");
-    predio->upArrow = SDL_CreateTextureFromSurface(screen, tmp);
-    predio->upArrowRect.w = 16;
-    predio->upArrowRect.h = 16;
-    predio->upArrowRect.x = 5*16;
-    predio->upArrowRect.y = 16;
+    //Escada pra cima e pra baixo
+    tmp = IMG_Load("data/stair-up-down.jpg");
+    predio->escadaCimaBaixo = SDL_CreateTextureFromSurface(screen, tmp);
+    predio->escadasRect[UP_DOWN_STAIR].w = 16;
+    predio->escadasRect[UP_DOWN_STAIR].h = 16;
+    predio->escadasRect[UP_DOWN_STAIR].x = 0;
+    predio->escadasRect[UP_DOWN_STAIR].y = 0;
     SDL_FreeSurface(tmp);
 }
 
@@ -189,12 +188,33 @@ void renderAndarPredio(SDL_Renderer *screen, Predio *predio, int andar, SDL_Rect
     bool isJirobaldo;
     predio->frame++;
     SDL_Rect andarRect;
-    // SDL_RenderGetViewport(screen, &andarRect);
+
+    //Renderiza o andar
     andarRect.h = aux.h * ((predio->h >= predio->w) ? predio->h : predio->w);
     andarRect.w = andarRect.h;
     andarRect.x = 0;
     andarRect.y = 0;
     SDL_RenderCopy(screen, predio->andares[andar], NULL, &andarRect);
+
+    //Renderiza o Jirobaldo
+    if(predio->jirobaldo.z == andar){
+        aux.x = predio->jirobaldo.y * aux.h;
+        aux.y = predio->jirobaldo.x * aux.h;
+        if(predio->jirobaldo.isAnimating){
+            int face = predio->jirobaldo.face;
+            int dist = aux.h/8; //n pixels que o jirobaldo anda a cada frame
+            if(face == FACE_NORTH || face == FACE_SOUTH){
+                face == FACE_NORTH ? (aux .y = aux.y + aux.h - (predio->jirobaldo.frame * dist)) 
+                    : (aux.y = aux.y - aux.h + (predio->jirobaldo.frame * dist));
+            }else{
+                // aux.x = (aux.x - aux.h);
+                face == FACE_WEST ? (aux.x = aux.x + aux.h - (predio->jirobaldo.frame * dist))
+                    : (aux.x = aux.x - aux.h + (predio->jirobaldo.frame * dist));
+            }
+        }
+        renderJirobaldo(screen, &predio->jirobaldo, aux);
+    }
+
     for(i = 0; i < predio->h; i++){
         for(j = 0; j < predio->w; j++){
             isJirobaldo = false;
@@ -202,33 +222,13 @@ void renderAndarPredio(SDL_Renderer *screen, Predio *predio, int andar, SDL_Rect
             aux.x = j * aux.h;
             char c = predio->pisos[andar].pontos[i][j];
 
-            //Coloca o Jirobaldo
             if(predio->jirobaldo.x == i && predio->jirobaldo.y == j && predio->jirobaldo.z == andar){
                 isJirobaldo = true;
-                if(predio->jirobaldo.isAnimating){
-                    int face = predio->jirobaldo.face;
-                    int dist = aux.h/8; //pixels que o jirobaldo anda a cada frame
-                    if(face == FACE_NORTH || face == FACE_SOUTH){
-                        face == FACE_NORTH ? (aux .y = aux.y + aux.h - (predio->jirobaldo.frame * dist)) 
-                            : (aux.y = aux.y - aux.h + (predio->jirobaldo.frame * dist));
-                    }else{
-                        // aux.x = (aux.x - aux.h);
-                        face == FACE_WEST ? (aux.x = aux.x + aux.h - (predio->jirobaldo.frame * dist))
-                            : (aux.x = aux.x - aux.h + (predio->jirobaldo.frame * dist));
-                    }
-                }
-                renderJirobaldo(screen, &predio->jirobaldo, aux);
-                aux.y = i * aux.h;
-                aux.x = j * aux.h;
             }
 
             //Coisas que ficam na frente do Jirobaldo
-            if(c == 'T'){
-                SDL_RenderCopy(screen, predio->torneira, &predio->torneiraRect, &aux);
-            }else if(c == 'F' && !isJirobaldo){
+            if(c == 'F' && !isJirobaldo && predio->jirobaldo.z == andar){
                 SDL_RenderCopy(screen, predio->fogo, &predio->fogoRect[predio->frame % 5], &aux);
-            }else if(c == 'S'){
-                SDL_RenderCopy(screen, predio->chaoSaida, &predio->chaoSaidaRect[PREDIO_SAIDA], &aux);
             }
         }
     }

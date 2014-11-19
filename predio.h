@@ -7,6 +7,7 @@
 #define PREDIO_SAIDA 1
 #define UP_STAIR 0
 #define DOWN_STAIR 1
+#define UP_DOWN_STAIR 2
 
 typedef struct{
 	char **pontos;
@@ -18,9 +19,9 @@ typedef struct{
 	int altura, w, h;
 	Jirobaldo jirobaldo;
 	int frame; //para animar o fogo
-	SDL_Texture *chaoSaida, *paredes, *fogo, *escadas, *torneira, *upArrow;
+	SDL_Texture *chaoSaida, *paredes, *fogo, *escadas, *escadaCimaBaixo, *torneira;
 	SDL_Texture **andares; //Texturas que guardam todo o andar
-	SDL_Rect chaoSaidaRect[2], paredeRect, fogoRect[5], escadasRect[2], torneiraRect, upArrowRect;
+	SDL_Rect chaoSaidaRect[2], paredeRect, fogoRect[5], escadasRect[3], torneiraRect;
 }Predio;
 
 //Inicia o predio, retorna false caso tenha ocorrido algum erro

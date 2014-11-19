@@ -3,6 +3,7 @@
 *.pdf
 ci067_sdl2/
 data/*
+!data/stair-up-down.jpg
 !data/skorpios-pack
 !data/audio
 !data/fonts

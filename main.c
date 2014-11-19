@@ -26,17 +26,16 @@ void renderText(TTF_Font *fonte, char *texto, SDL_Rect aux, SDL_Color cor, int a
 bool isSaida();
 void novoEdificio(Edificio *edificio);
 void splashScreen();
+void renderDelay(Uint32 renderTime);
 
 int main(int argc, char **argv){
     bool quit = false;
     SDL_Event event;
     SDL_Rect aux;
-    int waitTime = 0;
-    Uint32 startTime = 0; //Tempo inicial
+    Uint32 renderTime; //Tempo inicial
 
     //Lê os parâmetros da linha de comando
     lerParametros(argc, argv);
-    waitTime = passosPorSegundo > 0 ? (1000/passosPorSegundo): 0;
     //Lê o arquivo do prédio
     if(arquivo == NULL){
         puts("ERRO: Nenhum arquivo foi especificado.");
@@ -71,13 +70,13 @@ int main(int argc, char **argv){
     aux.w = aux.h;
     aux.x = 0;
     aux.y = 0;
-    gerarTexturasAndares(screen, &predio, aux);
     titleFont = TTF_OpenFont("data/fonts/Plane-Crash.ttf", 48);
     water = Mix_LoadWAV("data/audio/water-splash.wav");
     titleTheme = Mix_LoadMUS("data/audio/bost-imagine-the-fire.ogg");
     fire = Mix_LoadWAV("data/audio/fire.wav");
     Mix_PlayMusic(titleTheme, -1);
     splashScreen();
+    gerarTexturasAndares(screen, &predio, aux);
 
     //Se for modo resolvedor gera a solução
     resp = predio_resolve(&edificio);
@@ -93,6 +92,7 @@ int main(int argc, char **argv){
      *         Se for resolvedor, avança/retrocede um passo
      */
     while(!quit){
+        renderTime = SDL_GetTicks();
         SDL_SetRenderDrawColor(screen, 0, 0, 0, 255);
         SDL_RenderClear(screen);
 
@@ -144,9 +144,8 @@ int main(int argc, char **argv){
                 validaEventos(event);
             }
         }
-        if(isModoResolvedor && passosPorSegundo > 0 
-            && (SDL_GetTicks() - startTime >= waitTime)){
-            startTime = SDL_GetTicks();
+
+        if(isModoResolvedor && passosPorSegundo > 0){
             int passo = resp->p[passos];
             passos++;
             switch(passo){
@@ -183,8 +182,7 @@ int main(int argc, char **argv){
             }
             jirobaldoValido();
         }
-        //TODO: Arrumar
-        SDL_Delay(1000/30);
+        renderDelay(renderTime);
     }
     Mix_HaltMusic();
 
@@ -497,4 +495,17 @@ void splashScreen(){
 
     SDL_DestroyTexture(title);
     SDL_DestroyTexture(subtitle);
+}
+
+void renderDelay(Uint32 renderTime){
+    Uint32 t = SDL_GetTicks();
+    Uint32 delay = 1000/30; //"30 fps"
+    Uint32 render = t - renderTime;
+    if(isModoResolvedor && passosPorSegundo > 30){
+        delay = 1000/passosPorSegundo;
+    }
+    if(render < delay){
+        //TODO: Precisa "compensar" o incremento do frame do fogo
+        SDL_Delay(delay - render - 1);
+    }
 }
