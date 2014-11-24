@@ -27,6 +27,7 @@ void renderInfoBar(SDL_Rect aux);
 bool isSaida();
 void novoEdificio(Edificio *edificio);
 void splashScreen();
+void fimJogo();
 void renderDelay(Uint32 renderTime);
 
 int main(int argc, char **argv){
@@ -72,7 +73,7 @@ int main(int argc, char **argv){
     titleFont = TTF_OpenFont("data/fonts/Plane-Crash.ttf", 48);
     water = Mix_LoadWAV("data/audio/water-splash.wav");
     titleTheme = Mix_LoadMUS("data/audio/bost-imagine-the-fire.ogg");
-    fire = Mix_LoadWAV("data/audio/fire.wav");
+    fire = Mix_LoadMUS("data/audio/fire.wav");
     Mix_PlayMusic(titleTheme, -1);
     
     //SplashScreen
@@ -104,6 +105,7 @@ int main(int argc, char **argv){
      *         Se for simulador lida com a jogabilidade
      *         Se for resolvedor, avança/retrocede um passo
      */
+    Mix_PlayMusic(fire, -1);
     while(!quit){
         renderTime = SDL_GetTicks();
         SDL_SetRenderDrawColor(screen, 0, 0, 0, 255);
@@ -162,9 +164,10 @@ int main(int argc, char **argv){
 
         renderDelay(renderTime);
     }
+    if(passos >= resp->len){ //Animação de fim de jogo
+        fimJogo();
+    }
     Mix_HaltMusic();
-
-    //TODO: fimJogo(); //Animação de fim de jogo
     fechaSDL();
     return 0;
 }
@@ -456,7 +459,7 @@ void splashScreen(){
     tmp = TTF_RenderUTF8_Solid(titleFont, "jirobaldo", (SDL_Color) {180, 0, 0});
     title = SDL_CreateTextureFromSurface(screen, tmp);
     SDL_SetTextureAlphaMod(title, alpha);
-    titleRect.w = tmp->w;    
+    titleRect.w = tmp->w;
     titleRect.h = tmp->h;
     titleRect.x = SCREEN_WIDTH/2 - titleRect.w/2;
     titleRect.y = SCREEN_HEIGHT/2 - titleRect.h/2;
@@ -474,7 +477,6 @@ void splashScreen(){
     while(alpha < 255){
         SDL_SetRenderDrawColor(screen, 0, 0, 0, 255);
         SDL_RenderClear(screen);
-        // SDL_RenderCopy(screen, bg, NULL, NULL);
         SDL_RenderCopy(screen, title, NULL, &titleRect);
         SDL_RenderCopy(screen, subtitle, NULL, &subtitleRect);
         SDL_RenderPresent(screen);
@@ -488,6 +490,36 @@ void splashScreen(){
 
     SDL_DestroyTexture(title);
     SDL_DestroyTexture(subtitle);
+}
+
+void fimJogo(){
+    SDL_Texture *congrats;
+    SDL_Rect congratsRect;
+    SDL_Surface *tmp;
+    Uint8 alpha = 0;
+
+    tmp = TTF_RenderUTF8_Solid(titleFont, "jirobaldo vive!", (SDL_Color) {255, 255, 255});
+    congrats = SDL_CreateTextureFromSurface(screen, tmp);
+    SDL_SetTextureAlphaMod(congrats, alpha);
+    congratsRect.w = tmp->w;
+    congratsRect.h = tmp->h;
+    congratsRect.x = SCREEN_WIDTH/2 - congratsRect.w/2;
+    congratsRect.y = SCREEN_HEIGHT/2 - congratsRect.h/2;
+    SDL_FreeSurface(tmp);
+
+    while(alpha < 255){
+        SDL_SetRenderDrawColor(screen, 0, 0, 0, 255);
+        SDL_RenderClear(screen);
+        SDL_RenderCopy(screen, congrats, NULL, &congratsRect);
+        SDL_RenderPresent(screen);
+
+        alpha+=5;
+        SDL_SetTextureAlphaMod(congrats, alpha);
+
+        SDL_Delay(1000/30);
+    }
+
+    SDL_DestroyTexture(congrats);
 }
 
 void renderDelay(Uint32 renderTime){
