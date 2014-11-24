@@ -27,6 +27,17 @@ void carregarTexturasJirobaldo(SDL_Renderer *screen, Jirobaldo *jirobaldo){
 			jirobaldo->jirobaldoRect[i][j].y = i*64 + (8*64); //y para as linhas
 		}
 	}
+	for(i = FACE_NORTH; i <= FACE_EAST; i++){
+		for(j = 0; j < 7; j ++){
+			//Tamanho da textura
+			jirobaldo->danceRect[i][j].h = 64;
+			jirobaldo->danceRect[i][j].w = 64;
+
+			//Guarda no array todos os frames para as animações
+			jirobaldo->danceRect[i][j].x = j*64; //x para as colunas
+			jirobaldo->danceRect[i][j].y = i*64; //y para as linhas
+		}
+	}
 	SDL_FreeSurface(tmp);
 }	
 
@@ -39,6 +50,14 @@ void renderJirobaldo(SDL_Renderer *screen, Jirobaldo *jirobaldo, SDL_Rect aux){
 	}
 	SDL_Rect jiroRect;
 	jiroRect = jirobaldo->jirobaldoRect[jirobaldo->face][jirobaldo->frame];
+
+	SDL_RenderCopy(screen, jirobaldo->texture, &jiroRect, &aux);
+}
+
+void renderDanceJirobaldo(SDL_Renderer *screen, Jirobaldo *jirobaldo, SDL_Rect aux){
+	jirobaldo->frame++;
+	SDL_Rect jiroRect;
+	jiroRect = jirobaldo->danceRect[jirobaldo->face][jirobaldo->frame % 7];
 
 	SDL_RenderCopy(screen, jirobaldo->texture, &jiroRect, &aux);
 }

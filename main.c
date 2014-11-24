@@ -10,24 +10,48 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_mixer.h>
+#include <time.h>
 #include "predio.h"
 #include "libpredio.h"
 #include "global.h"
 
-//Lê os parâmetros passados na linha de comando
-void lerParametros(int argc, char **argv);
+//Lê os parâmetros passados na linha de comando, retorna false caso ocorra um erro
+bool lerParametros(int argc, char **argv);
+
+//Retorna true se o SDL inicializou de forma correta, false caso contrário
 bool iniciaSDL();
+
 //Libera da memória as texturas, janelas, renderers e termina o SDL
 void fechaSDL();
+
 //Lida com os eventos de teclado durante o jogo
 void validaEventos(SDL_Event event);
+
+//Retorna true se Jirobaldo está numa posição válida no mapa
 bool jirobaldoValido();
+
+//Renderiza texto
 void renderText(TTF_Font *fonte, char *texto, SDL_Rect aux, SDL_Color cor, int align);
+
+//Renderiza a barra de informações (baldes, passos, andar)
 void renderInfoBar(SDL_Rect aux);
+
+//Retorna true se a posição atual do Jirobaldo é a saída
 bool isSaida();
+
+//Gera um novo Edificio (Edificio é a antiga estrutura Predio na solução do Flávio)
 void novoEdificio(Edificio *edificio);
+
+//Tela de abertura
 void splashScreen();
+
+//Tela de encerramento
 void fimJogo();
+
+//Encerramento ruim
+void jiroDeath();
+
+//Função para esperar o tempo correto
 void renderDelay(Uint32 renderTime);
 
 int main(int argc, char **argv){
@@ -37,7 +61,11 @@ int main(int argc, char **argv){
     Uint32 renderTime, ticks = 0; //Tempo inicial
 
     //Lê os parâmetros da linha de comando
-    lerParametros(argc, argv);
+    if(!lerParametros(argc, argv)){
+        puts("ERRO: Digite um número inteira na entrada");
+        return 1;
+    }
+
     //Lê o arquivo do prédio
     if(arquivo == NULL){
         puts("ERRO: Nenhum arquivo foi especificado.");
@@ -69,11 +97,12 @@ int main(int argc, char **argv){
     carregarTexturasPredio(screen, &predio);
     carregarTexturasJirobaldo(screen, &predio.jirobaldo);
 
-    //Fontes e sons
+    //Carrega fontes e sons
     titleFont = TTF_OpenFont("data/fonts/Plane-Crash.ttf", 48);
     water = Mix_LoadWAV("data/audio/water-splash.wav");
     titleTheme = Mix_LoadMUS("data/audio/bost-imagine-the-fire.ogg");
     fire = Mix_LoadMUS("data/audio/fire.wav");
+    doors = Mix_LoadMUS("data/audio/light-my-fire.ogg");
     Mix_PlayMusic(titleTheme, -1);
     
     //SplashScreen
@@ -124,7 +153,7 @@ int main(int argc, char **argv){
         SDL_RenderSetViewport(screen, &gameViewport);
         renderAndarPredio(screen, &predio, predio.jirobaldo.z, aux);
 
-        //Renderiza os mini-mapas
+        //Renderiza o mini-mapa do andar de cima
         if(predio.jirobaldo.z-1 >= 0){
             aux.h = downMapViewport.h/predio.h;
             aux.w = aux.h;
@@ -132,6 +161,7 @@ int main(int argc, char **argv){
             renderAndarPredio(screen, &predio, predio.jirobaldo.z - 1, aux);
         }
 
+        //Renderiza o mini-mapa do andar de baixo
         if(predio.jirobaldo.z+1 < predio.altura){
             aux.h = topMapViewport.h/predio.h;
             aux.w = aux.h;
@@ -164,7 +194,9 @@ int main(int argc, char **argv){
 
         renderDelay(renderTime);
     }
+
     if(passos >= resp->len){ //Animação de fim de jogo
+        Mix_PlayMusic(doors, -1);
         fimJogo();
     }
     Mix_HaltMusic();
@@ -172,22 +204,30 @@ int main(int argc, char **argv){
     return 0;
 }
 
-void lerParametros(int argc, char **argv){
+bool lerParametros(int argc, char **argv){
     int c;
-    while((c = getopt(argc, argv, "f:s")) != -1){
+    while((c = getopt(argc, argv, "sf:")) != -1){
         switch(c){
-            case 'f':
-            passosPorSegundo = atoi(optarg);
-            break;
             case 's':
             isModoResolvedor = true;
+            break;
+            case 'f':
+            passosPorSegundo = atof(optarg);
+            if(passosPorSegundo != atoi(optarg)){
+                passosPorSegundo = 0;
+                return false;
+            }
             break;
         }
     }
 
+    isModoResolvedor = (passosPorSegundo > 0);
+
     if(optind < argc){
         arquivo = argv[optind];
     }
+
+    return true;
 }
 
 bool iniciaSDL(){
@@ -205,7 +245,7 @@ bool iniciaSDL(){
         return false;
     }
 
-    //Define as viewports
+    //Define as dimensões das viewports
     infoBarViewport.x = 0;
     infoBarViewport.y = 0;
     infoBarViewport.w = SCREEN_WIDTH;
@@ -225,11 +265,14 @@ bool iniciaSDL(){
     downMapViewport.y = INFO_BAR_HEIGHT + (SCREEN_WIDTH*0.2) + 10; //10px para separar os mapas
     downMapViewport.w = (SCREEN_WIDTH*0.2);
     downMapViewport.h = (SCREEN_WIDTH*0.2);
+    
     return true;
 }
 
 void fechaSDL(){
     Mix_FreeMusic(titleTheme);
+    Mix_FreeMusic(fire);
+    Mix_FreeMusic(doors);
     SDL_DestroyRenderer(screen);
     SDL_DestroyWindow(window);
     TTF_CloseFont(titleFont);
@@ -243,6 +286,8 @@ void validaEventos(SDL_Event event){
     int x = predio.jirobaldo.x;
     int y = predio.jirobaldo.y;
     int z = predio.jirobaldo.z;
+
+    //Se for resolvedor, aceita apenas eventos das setas para direita e esquerda
     if(isModoResolvedor){
         if(event.type == SDL_KEYDOWN && (event.key.keysym.sym == SDLK_RIGHT || event.key.keysym.sym == SDLK_LEFT)){
             int passo;
@@ -494,27 +539,44 @@ void splashScreen(){
 
 void fimJogo(){
     SDL_Texture *congrats;
-    SDL_Rect congratsRect;
+    SDL_Rect congratsRect, jiroRect;
     SDL_Surface *tmp;
     Uint8 alpha = 0;
+    bool quit = false;
+    SDL_Event event;
 
-    tmp = TTF_RenderUTF8_Solid(titleFont, "jirobaldo vive!", (SDL_Color) {255, 255, 255});
+    tmp = TTF_RenderUTF8_Solid(titleFont, "jirobaldo vive", (SDL_Color) {255, 165, 0});
     congrats = SDL_CreateTextureFromSurface(screen, tmp);
     SDL_SetTextureAlphaMod(congrats, alpha);
     congratsRect.w = tmp->w;
     congratsRect.h = tmp->h;
     congratsRect.x = SCREEN_WIDTH/2 - congratsRect.w/2;
     congratsRect.y = SCREEN_HEIGHT/2 - congratsRect.h/2;
+    jiroRect.w = 64;
+    jiroRect.h = 64;
+    jiroRect.x = SCREEN_WIDTH/2 - jiroRect.w/2;
+    jiroRect.y = congratsRect.y + jiroRect.h;
     SDL_FreeSurface(tmp);
 
-    while(alpha < 255){
+    predio.jirobaldo.face = FACE_SOUTH;
+    predio.jirobaldo.isAnimating = true;
+    predio.jirobaldo.frame = 0;
+
+    SDL_RenderSetViewport(screen, NULL);
+    while(!quit){
         SDL_SetRenderDrawColor(screen, 0, 0, 0, 255);
         SDL_RenderClear(screen);
         SDL_RenderCopy(screen, congrats, NULL, &congratsRect);
+        renderDanceJirobaldo(screen, &predio.jirobaldo, jiroRect);
         SDL_RenderPresent(screen);
 
         alpha+=5;
         SDL_SetTextureAlphaMod(congrats, alpha);
+        while(SDL_PollEvent(&event)){
+            if(event.type == SDL_QUIT){
+                quit = true;
+            }
+        }
 
         SDL_Delay(1000/30);
     }

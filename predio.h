@@ -36,9 +36,9 @@ void gerarTexturasAndares(SDL_Renderer *screen, Predio *predio, SDL_Rect aux);
 void carregarTexturasPredio(SDL_Renderer *screen, Predio *predio);
 //Retorna true se o ponto está no andar
 bool isPontoNoAndar(Pavimento *pavimento, int x, int y);
-//Retorna true caso o ponto esteja no prédio, false caso contrário
+//Retorna true caso o ponto esteja no predio, false caso contrário
 bool isPontoNoPredio(Predio *predio, int x, int y, int z);
-//Mostra, graficamente, um andar do prédio
+//Mostra, graficamente, um andar do predio
 void renderAndarPredio(SDL_Renderer *screen, Predio *predio, int andar, SDL_Rect aux);
 
 #endif

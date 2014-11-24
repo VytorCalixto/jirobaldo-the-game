@@ -16,9 +16,13 @@ typedef struct{
 	bool isAnimating;
 	SDL_Texture *texture;
 	SDL_Rect jirobaldoRect[4][9];
+	SDL_Rect danceRect[4][7];
 }Jirobaldo;
 
+//Carrega as texturas do Jirobaldo e define os SDL_Rect's necessários
 void carregarTexturasJirobaldo(SDL_Renderer *screen, Jirobaldo *jirobaldo);
+//Renderiza o Jirobaldo
 void renderJirobaldo(SDL_Renderer *screen, Jirobaldo *jirobaldo, SDL_Rect aux);
+void renderDanceJirobaldo(SDL_Renderer *screen, Jirobaldo *jirobaldo, SDL_Rect aux);
 
 #endif

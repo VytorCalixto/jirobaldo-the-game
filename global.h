@@ -34,8 +34,8 @@ char *arquivo;
 int passos = 0;
 
 //Efeitos sonoros
-Mix_Music *titleTheme;
-Mix_Chunk  *fire = NULL, *water = NULL;
+Mix_Music *titleTheme, *fire, *doors;
+Mix_Chunk *water = NULL;
 
 #include "predio.h"
 Predio predio;

@@ -108,40 +108,46 @@ void gerarTexturasAndares(SDL_Renderer *screen, Predio *predio, SDL_Rect aux){
     }
 }
 
+//Carrega uma textura
+SDL_Texture *carregarTextura(SDL_Renderer *screen, SDL_Texture *texture, char *path, SDL_Rect *rect){
+    SDL_Surface *tmp;
+    tmp = IMG_Load(path);
+    texture = SDL_CreateTextureFromSurface(screen, tmp);
+    if(rect != NULL){
+        rect->h = tmp->h;
+        rect->w = tmp->w;
+    }
+    SDL_FreeSurface(tmp);
+    return texture;
+}
+
 void carregarTexturasPredio(SDL_Renderer *screen, Predio *predio){
     predio->frame = 0;
-    SDL_Surface *tmp;
+    // SDL_Surface *tmp;
 
     //Torneira
-    tmp = IMG_Load("data/images/Decor0.png");
-    predio->torneira = SDL_CreateTextureFromSurface(screen, tmp);
+    predio->torneira = carregarTextura(screen, predio->torneira, "data/images/Decor0.png", NULL);
     predio->torneiraRect.h = 16;
     predio->torneiraRect.w = 16;
     predio->torneiraRect.x = 0;
     predio->torneiraRect.y = 21*16;
-    SDL_FreeSurface(tmp);
 
     //Chão
-    tmp = IMG_Load("data/images/Interior-Furniture.png");
-    predio->chao = SDL_CreateTextureFromSurface(screen, tmp);
+    predio->chao = carregarTextura(screen, predio->chao, "data/images/Interior-Furniture.png", NULL);
     predio->chaoRect.w = 32;
     predio->chaoRect.h = 32;
     predio->chaoRect.x = 6*32;
     predio->chaoRect.y = 2*32;
-    SDL_FreeSurface(tmp);
 
     //Saida
-    tmp = IMG_Load("data/images/Door0.png");
-    predio->saida = SDL_CreateTextureFromSurface(screen, tmp);
+    predio->saida = carregarTextura(screen, predio->saida, "data/images/Door0.png", NULL);
     predio->saidaRect.w = 16;
     predio->saidaRect.h = 16;
     predio->saidaRect.x = 0;
     predio->saidaRect.y = 16;
-    SDL_FreeSurface(tmp);
 
     //Fogo
-    tmp = IMG_Load("data/images/flames.png");
-    predio->fogo = SDL_CreateTextureFromSurface(screen, tmp);
+    predio->fogo = carregarTextura(screen, predio->fogo, "data/images/flames.png", NULL);
     int i;
     for(i = 0; i < 12; i++){
         predio->fogoRect[i].w = 16;
@@ -149,20 +155,16 @@ void carregarTexturasPredio(SDL_Renderer *screen, Predio *predio){
         predio->fogoRect[i].x = i*16;
         predio->fogoRect[i].y = 0;
     }
-    SDL_FreeSurface(tmp);
 
     //Paredes
-    tmp = IMG_Load("data/images/Wall.png");
-    predio->paredes = SDL_CreateTextureFromSurface(screen, tmp);
+    predio->paredes = carregarTextura(screen, predio->paredes, "data/images/Wall.png", NULL);
     predio->paredeRect.w = 16;
     predio->paredeRect.h = 16;
     predio->paredeRect.x = 3*16;
     predio->paredeRect.y = 12*16;
-    SDL_FreeSurface(tmp);
 
     //Escadas
-    tmp = IMG_Load("data/images/Tile.png");
-    predio->escadas = SDL_CreateTextureFromSurface(screen, tmp);
+    predio->escadas = carregarTextura(screen, predio->escadas, "data/images/Tile.png", NULL);
     predio->escadasRect[UP_STAIR].w = 16;
     predio->escadasRect[UP_STAIR].h = 16;
     predio->escadasRect[UP_STAIR].x = 4*16;
@@ -172,25 +174,17 @@ void carregarTexturasPredio(SDL_Renderer *screen, Predio *predio){
     predio->escadasRect[DOWN_STAIR].h = 16;
     predio->escadasRect[DOWN_STAIR].x = 5*16;
     predio->escadasRect[DOWN_STAIR].y = 16;
-    SDL_FreeSurface(tmp);
 
     //Escada pra cima e pra baixo
-    tmp = IMG_Load("data/images/stair-up-down.jpg");
-    predio->escadaCimaBaixo = SDL_CreateTextureFromSurface(screen, tmp);
+    predio->escadaCimaBaixo = carregarTextura(screen, predio->escadaCimaBaixo, "data/images/stair-up-down.jpg", NULL);
     predio->escadasRect[UP_DOWN_STAIR].w = 16;
     predio->escadasRect[UP_DOWN_STAIR].h = 16;
     predio->escadasRect[UP_DOWN_STAIR].x = 0;
     predio->escadasRect[UP_DOWN_STAIR].y = 0;
-    SDL_FreeSurface(tmp);
 
-    //Fumaça
-    tmp = IMG_Load("data/images/fog01.png");
-    predio->fumaca = SDL_CreateTextureFromSurface(screen, tmp);
-    predio->fumacaRect.w = tmp->w;
-    predio->fumacaRect.h = tmp->h;
+    predio->fumaca = carregarTextura(screen, predio->fumaca, "data/images/fog01.png", &predio->fumacaRect);
     predio->fumacaRect.x = 0;
     predio->fumacaRect.y = 0;
-    SDL_FreeSurface(tmp);
 }
 
 void renderAndarPredio(SDL_Renderer *screen, Predio *predio, int andar, SDL_Rect aux){
@@ -255,6 +249,7 @@ void renderAndarPredio(SDL_Renderer *screen, Predio *predio, int andar, SDL_Rect
         aux.x = offset;
         aux.y = andarRect.h - aux.h;
         SDL_SetTextureColorMod(predio->fumaca, 20, 20, 20);
+        SDL_SetTextureAlphaMod(predio->fumaca, 200);
         SDL_RenderCopy(screen, predio->fumaca, &predio->fumacaRect, &aux);
         aux.x = offset + aux.w;
         SDL_RenderCopy(screen, predio->fumaca, &predio->fumacaRect, &aux);
