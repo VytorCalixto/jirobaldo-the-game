@@ -12,7 +12,7 @@ void carregarTexturasJirobaldo(SDL_Renderer *screen, Jirobaldo *jirobaldo){
 
 	SDL_Surface *tmp;
 
-	tmp = IMG_Load("data/skorpios-pack/Characters/Character 1/Walk/Character1Walk.png");
+	tmp = IMG_Load("data/images/jirobaldo.png");
 	jirobaldo->texture = SDL_CreateTextureFromSurface(screen, tmp);
 
 	int i, j;
@@ -24,7 +24,7 @@ void carregarTexturasJirobaldo(SDL_Renderer *screen, Jirobaldo *jirobaldo){
 
 			//Guarda no array todos os frames para as animações
 			jirobaldo->jirobaldoRect[i][j].x = j*64; //x para as colunas
-			jirobaldo->jirobaldoRect[i][j].y = i*64; //y para as linhas
+			jirobaldo->jirobaldoRect[i][j].y = i*64 + (8*64); //y para as linhas
 		}
 	}
 	SDL_FreeSurface(tmp);

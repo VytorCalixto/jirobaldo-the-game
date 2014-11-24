@@ -19,9 +19,9 @@ typedef struct{
 	int altura, w, h;
 	Jirobaldo jirobaldo;
 	int frame; //para animar o fogo
-	SDL_Texture *chaoSaida, *paredes, *fogo, *escadas, *escadaCimaBaixo, *torneira;
+	SDL_Texture *chao, *saida, *paredes, *fogo, *escadas, *escadaCimaBaixo, *torneira, *fumaca;
 	SDL_Texture **andares; //Texturas que guardam todo o andar
-	SDL_Rect chaoSaidaRect[2], paredeRect, fogoRect[5], escadasRect[3], torneiraRect;
+	SDL_Rect chaoRect, saidaRect, paredeRect, fogoRect[12], escadasRect[3], torneiraRect, fumacaRect;
 }Predio;
 
 //Inicia o predio, retorna false caso tenha ocorrido algum erro

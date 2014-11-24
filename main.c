@@ -33,7 +33,7 @@ int main(int argc, char **argv){
     bool quit = false;
     SDL_Event event;
     SDL_Rect aux;
-    Uint32 renderTime; //Tempo inicial
+    Uint32 renderTime, ticks = 0; //Tempo inicial
 
     //Lê os parâmetros da linha de comando
     lerParametros(argc, argv);
@@ -78,22 +78,24 @@ int main(int argc, char **argv){
     //SplashScreen
     splashScreen();
     
+    //Gera a solução
+    resp = predio_resolve(&edificio);
+    if(resp->len < 0){
+        puts("ERRO: o mapa não tem solução");
+        return 1;
+    }
+    
     //Rect auxiliar para gerar as texturas dos andares
     aux.h = (predio.h >= predio.w) ? (gameViewport.h/predio.h) : (gameViewport.w/predio.w);
     aux.w = aux.h;
     aux.x = 0;
     aux.y = 0;
     /*
-    * Gera as texturas do andares (para mapas grandes pode demorar um pouco),
-    * mas compensa na velocidade de renderização
+    * Gera as texturas do andares (para mapas grandes pode demorar um pouco,
+    * mas compensa na velocidade de renderização)
     */
     gerarTexturasAndares(screen, &predio, aux);
 
-    //Se for modo resolvedor gera a solução
-    resp = predio_resolve(&edificio);
-    if(resp->len < 0){
-        return 1;
-    }
     
     /*
      * Loop princpial:
@@ -114,7 +116,6 @@ int main(int argc, char **argv){
         aux.y = 0;
         renderInfoBar(aux);
         
-
         //Renderiza o 'jogo' principal
         aux.h = (predio.h >= predio.w) ? (gameViewport.h/predio.h) : (gameViewport.w/predio.w);
         aux.w = aux.h;
@@ -138,7 +139,19 @@ int main(int argc, char **argv){
 
         SDL_RenderPresent(screen);
 
-        quit = isSaida() ? true : false;
+        //Se for resolvedor, com passos por segundo > 0 e tiver passado o tempo para renderizar
+        if(isModoResolvedor && passosPorSegundo > 0
+            && (SDL_GetTicks() - ticks >= (1000/passosPorSegundo))){
+            ticks = SDL_GetTicks();
+            //Empilha um evento com valor da seta direita
+            SDL_Event evento;
+            SDL_zero(evento);
+            evento.type = SDL_KEYDOWN;
+            evento.key.keysym.sym = SDLK_RIGHT;
+            SDL_PushEvent(&evento);
+        }
+
+        quit = (bool) isSaida();
         while(SDL_PollEvent(&event)){
             if(event.type == SDL_QUIT){
                 quit = true;
@@ -147,13 +160,6 @@ int main(int argc, char **argv){
             }
         }
 
-        if(isModoResolvedor && passosPorSegundo > 0){
-            SDL_Event event;
-            SDL_zero(event);
-            event.type = SDL_KEYDOWN;
-            event.key.keysym.sym = SDLK_RIGHT;
-            SDL_PushEvent(&event);
-        }
         renderDelay(renderTime);
     }
     Mix_HaltMusic();
@@ -242,13 +248,16 @@ void validaEventos(SDL_Event event){
                 passo = resp->p[passos];
                 if(passos < resp->len)
                     passos++;
-            }else if(tecla == SDLK_LEFT){
+            }else if(tecla == SDLK_LEFT && passosPorSegundo == 0){
                 if(passos > 0)
                     passos--;
                 else
                     return;
                 passo = resp->p[passos];
+            }else{
+                return;
             }
+
             switch(passo){
                 case PASSO_CIMA:
                     predio.jirobaldo.face = (tecla == SDLK_RIGHT) ? FACE_NORTH : FACE_SOUTH;

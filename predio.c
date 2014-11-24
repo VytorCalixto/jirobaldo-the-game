@@ -85,11 +85,9 @@ void gerarTexturasAndares(SDL_Renderer *screen, Predio *predio, SDL_Rect aux){
                 pos = predio->pisos[i].pontos[j][k];
                 aux.y = j * aux.h;
                 aux.x = k * aux.h;
-                if(pos == '.' || pos == 'J' || pos == 'F' || pos == 'T'){
-                    SDL_SetTextureColorMod(predio->chaoSaida, 100, 100, 100);
-                    SDL_RenderCopy(screen, predio->chaoSaida, &predio->chaoSaidaRect[PREDIO_CHAO], &aux);
+                if(pos == '.' || pos == 'J' || pos == 'F' || pos == 'T' || pos == 'S'){
+                    SDL_RenderCopy(screen, predio->chao, &predio->chaoRect, &aux);
                 }else if(pos == '#'){
-                    SDL_SetTextureColorMod(predio->paredes, 100, 100, 100);
                     SDL_RenderCopy(screen, predio->paredes, &predio->paredeRect, &aux);
                 }else if(pos == 'U'){
                     SDL_RenderCopy(screen, predio->escadas, &predio->escadasRect[UP_STAIR], &aux);
@@ -97,11 +95,11 @@ void gerarTexturasAndares(SDL_Renderer *screen, Predio *predio, SDL_Rect aux){
                     SDL_RenderCopy(screen, predio->escadas, &predio->escadasRect[DOWN_STAIR], &aux);
                 }else if(pos == 'E'){
                     SDL_RenderCopy(screen, predio->escadaCimaBaixo, &predio->escadasRect[UP_DOWN_STAIR], &aux);
-                }else if(pos == 'S'){
-                    SDL_RenderCopy(screen, predio->chaoSaida, &predio->chaoSaidaRect[PREDIO_SAIDA], &aux);
                 }
 
-                if(pos == 'T'){
+                if(pos == 'S'){
+                    SDL_RenderCopy(screen, predio->saida, &predio->saidaRect, &aux);
+                }else if(pos == 'T'){
                     SDL_RenderCopy(screen, predio->torneira, &predio->torneiraRect, &aux);
                 }
             }
@@ -115,7 +113,7 @@ void carregarTexturasPredio(SDL_Renderer *screen, Predio *predio){
     SDL_Surface *tmp;
 
     //Torneira
-    tmp = IMG_Load("data/DawnLike_3/Objects/Decor0.png");
+    tmp = IMG_Load("data/images/Decor0.png");
     predio->torneira = SDL_CreateTextureFromSurface(screen, tmp);
     predio->torneiraRect.h = 16;
     predio->torneiraRect.w = 16;
@@ -123,34 +121,38 @@ void carregarTexturasPredio(SDL_Renderer *screen, Predio *predio){
     predio->torneiraRect.y = 21*16;
     SDL_FreeSurface(tmp);
 
-    //Chão e saída
-    tmp = IMG_Load("data/skorpios-pack/Interior-Furniture.png");
-    predio->chaoSaida = SDL_CreateTextureFromSurface(screen, tmp);
-    predio->chaoSaidaRect[PREDIO_CHAO].w = 32;
-    predio->chaoSaidaRect[PREDIO_CHAO].h = 32;
-    predio->chaoSaidaRect[PREDIO_CHAO].x = 6*32;
-    predio->chaoSaidaRect[PREDIO_CHAO].y = 2*32;
+    //Chão
+    tmp = IMG_Load("data/images/Interior-Furniture.png");
+    predio->chao = SDL_CreateTextureFromSurface(screen, tmp);
+    predio->chaoRect.w = 32;
+    predio->chaoRect.h = 32;
+    predio->chaoRect.x = 6*32;
+    predio->chaoRect.y = 2*32;
+    SDL_FreeSurface(tmp);
 
-    predio->chaoSaidaRect[PREDIO_SAIDA].w = 32;
-    predio->chaoSaidaRect[PREDIO_SAIDA].h = 32;
-    predio->chaoSaidaRect[PREDIO_SAIDA].x = 7*32;
-    predio->chaoSaidaRect[PREDIO_SAIDA].y = 5*32;
+    //Saida
+    tmp = IMG_Load("data/images/Door0.png");
+    predio->saida = SDL_CreateTextureFromSurface(screen, tmp);
+    predio->saidaRect.w = 16;
+    predio->saidaRect.h = 16;
+    predio->saidaRect.x = 0;
+    predio->saidaRect.y = 16;
     SDL_FreeSurface(tmp);
 
     //Fogo
-    tmp = IMG_Load("data/skorpios-pack/CampFireFinished.png");
+    tmp = IMG_Load("data/images/flames.png");
     predio->fogo = SDL_CreateTextureFromSurface(screen, tmp);
     int i;
-    for(i = 0; i < 5; i++){
-        predio->fogoRect[i].w = 64;
-        predio->fogoRect[i].h = 64;
-        predio->fogoRect[i].x = i*64;
+    for(i = 0; i < 12; i++){
+        predio->fogoRect[i].w = 16;
+        predio->fogoRect[i].h = 24;
+        predio->fogoRect[i].x = i*16;
         predio->fogoRect[i].y = 0;
     }
     SDL_FreeSurface(tmp);
 
     //Paredes
-    tmp = IMG_Load("data/DawnLike_3/Objects/Wall.png");
+    tmp = IMG_Load("data/images/Wall.png");
     predio->paredes = SDL_CreateTextureFromSurface(screen, tmp);
     predio->paredeRect.w = 16;
     predio->paredeRect.h = 16;
@@ -159,31 +161,39 @@ void carregarTexturasPredio(SDL_Renderer *screen, Predio *predio){
     SDL_FreeSurface(tmp);
 
     //Escadas
-    tmp = IMG_Load("data/DawnLike_3/Objects/Tile.png");
+    tmp = IMG_Load("data/images/Tile.png");
     predio->escadas = SDL_CreateTextureFromSurface(screen, tmp);
     predio->escadasRect[UP_STAIR].w = 16;
     predio->escadasRect[UP_STAIR].h = 16;
-    predio->escadasRect[UP_STAIR].x = 0;
+    predio->escadasRect[UP_STAIR].x = 4*16;
     predio->escadasRect[UP_STAIR].y = 16;
 
     predio->escadasRect[DOWN_STAIR].w = 16;
     predio->escadasRect[DOWN_STAIR].h = 16;
-    predio->escadasRect[DOWN_STAIR].x = 16;
+    predio->escadasRect[DOWN_STAIR].x = 5*16;
     predio->escadasRect[DOWN_STAIR].y = 16;
     SDL_FreeSurface(tmp);
 
     //Escada pra cima e pra baixo
-    tmp = IMG_Load("data/stair-up-down.jpg");
+    tmp = IMG_Load("data/images/stair-up-down.jpg");
     predio->escadaCimaBaixo = SDL_CreateTextureFromSurface(screen, tmp);
     predio->escadasRect[UP_DOWN_STAIR].w = 16;
     predio->escadasRect[UP_DOWN_STAIR].h = 16;
     predio->escadasRect[UP_DOWN_STAIR].x = 0;
     predio->escadasRect[UP_DOWN_STAIR].y = 0;
     SDL_FreeSurface(tmp);
+
+    //Fumaça
+    tmp = IMG_Load("data/images/fog01.png");
+    predio->fumaca = SDL_CreateTextureFromSurface(screen, tmp);
+    predio->fumacaRect.w = tmp->w;
+    predio->fumacaRect.h = tmp->h;
+    predio->fumacaRect.x = 0;
+    predio->fumacaRect.y = 0;
+    SDL_FreeSurface(tmp);
 }
 
 void renderAndarPredio(SDL_Renderer *screen, Predio *predio, int andar, SDL_Rect aux){
-    //TODO: Iluminação "spot" (círculo ao redor do fogo) ou degradê nos vizinhos
     int i, j;
     bool isJirobaldo;
     predio->frame++;
@@ -194,10 +204,31 @@ void renderAndarPredio(SDL_Renderer *screen, Predio *predio, int andar, SDL_Rect
     andarRect.w = andarRect.h;
     andarRect.x = 0;
     andarRect.y = 0;
+    SDL_SetTextureColorMod(predio->andares[andar], 100, 100, 100);
     SDL_RenderCopy(screen, predio->andares[andar], NULL, &andarRect);
 
-    //Renderiza o Jirobaldo
+    //Renderiza o fogo
+    for(i = 0; i < predio->h; i++){
+        for(j = 0; j < predio->w; j++){
+            isJirobaldo = false;
+            aux.y = i * aux.h;
+            aux.x = j * aux.h;
+            char c = predio->pisos[andar].pontos[i][j];
+
+            if(predio->jirobaldo.x == i && predio->jirobaldo.y == j && predio->jirobaldo.z == andar){
+                isJirobaldo = true;
+            }
+
+            if(c == 'F' && !isJirobaldo && predio->jirobaldo.z == andar){
+                SDL_SetTextureColorMod(predio->chao, 180, 100, 100);
+                SDL_RenderCopy(screen, predio->chao, &predio->chaoRect, &aux);
+                SDL_RenderCopy(screen, predio->fogo, &predio->fogoRect[predio->frame % 12], &aux);
+            }
+        }
+    }
+
     if(predio->jirobaldo.z == andar){
+        //Renderiza o Jirobaldo
         aux.x = predio->jirobaldo.y * aux.h;
         aux.y = predio->jirobaldo.x * aux.h;
         if(predio->jirobaldo.isAnimating){
@@ -213,24 +244,27 @@ void renderAndarPredio(SDL_Renderer *screen, Predio *predio, int andar, SDL_Rect
             }
         }
         renderJirobaldo(screen, &predio->jirobaldo, aux);
-    }
 
-    for(i = 0; i < predio->h; i++){
-        for(j = 0; j < predio->w; j++){
-            isJirobaldo = false;
-            aux.y = i * aux.h;
-            aux.x = j * aux.h;
-            char c = predio->pisos[andar].pontos[i][j];
-
-            if(predio->jirobaldo.x == i && predio->jirobaldo.y == j && predio->jirobaldo.z == andar){
-                isJirobaldo = true;
-            }
-
-            //Coisas que ficam na frente do Jirobaldo
-            if(c == 'F' && !isJirobaldo && predio->jirobaldo.z == andar){
-                SDL_RenderCopy(screen, predio->fogo, &predio->fogoRect[predio->frame % 5], &aux);
-            }
+        //Renderiza a fumaça
+        SDL_RenderGetViewport(screen, &aux);
+        int offset = -predio->frame;
+        if(offset < -aux.w){
+            predio->frame = 0;
+            offset = 0;
         }
+        aux.x = offset;
+        aux.y = andarRect.h - aux.h;
+        SDL_SetTextureColorMod(predio->fumaca, 20, 20, 20);
+        SDL_RenderCopy(screen, predio->fumaca, &predio->fumacaRect, &aux);
+        aux.x = offset + aux.w;
+        SDL_RenderCopy(screen, predio->fumaca, &predio->fumacaRect, &aux);
+
+        SDL_Rect mask;
+        mask.w = aux.w - andarRect.w;
+        mask.h = aux.h;
+        mask.x = andarRect.w;
+        mask.y = 0;
+        SDL_RenderFillRect(screen, &mask);
     }
 }
 
