@@ -23,6 +23,7 @@ void fechaSDL();
 void validaEventos(SDL_Event event);
 bool jirobaldoValido();
 void renderText(TTF_Font *fonte, char *texto, SDL_Rect aux, SDL_Color cor, int align);
+void renderInfoBar(SDL_Rect aux);
 bool isSaida();
 void novoEdificio(Edificio *edificio);
 void splashScreen();
@@ -59,23 +60,33 @@ int main(int argc, char **argv){
         return 1;
     }
 
-
+    //Cria a janela e o renderizador
     window = SDL_CreateWindow("Jirobaldo: Sobrevivente", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
     screen = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
-    //Splash screen e carregar arquivos/texturas
+    //Carrega as texturas do prédio e do Jirobaldo
     carregarTexturasPredio(screen, &predio);
     carregarTexturasJirobaldo(screen, &predio.jirobaldo);
-    aux.h = (predio.h >= predio.w) ? (gameViewport.h/predio.h) : (gameViewport.w/predio.w);
-    aux.w = aux.h;
-    aux.x = 0;
-    aux.y = 0;
+
+    //Fontes e sons
     titleFont = TTF_OpenFont("data/fonts/Plane-Crash.ttf", 48);
     water = Mix_LoadWAV("data/audio/water-splash.wav");
     titleTheme = Mix_LoadMUS("data/audio/bost-imagine-the-fire.ogg");
     fire = Mix_LoadWAV("data/audio/fire.wav");
     Mix_PlayMusic(titleTheme, -1);
+    
+    //SplashScreen
     splashScreen();
+    
+    //Rect auxiliar para gerar as texturas dos andares
+    aux.h = (predio.h >= predio.w) ? (gameViewport.h/predio.h) : (gameViewport.w/predio.w);
+    aux.w = aux.h;
+    aux.x = 0;
+    aux.y = 0;
+    /*
+    * Gera as texturas do andares (para mapas grandes pode demorar um pouco),
+    * mas compensa na velocidade de renderização
+    */
     gerarTexturasAndares(screen, &predio, aux);
 
     //Se for modo resolvedor gera a solução
@@ -101,16 +112,8 @@ int main(int argc, char **argv){
         aux.h = INFO_BAR_HEIGHT;
         aux.x = 0;
         aux.y = 0;
-        //TODO: colocar a renderização da barra numa função
-        char baldes[20];
-        sprintf(baldes, "baldes: %d/%d", predio.jirobaldo.baldes, predio.jirobaldo.MAX_BALDES);
-        renderText(titleFont, baldes, aux, (SDL_Color) {200, 200, 200}, 0);
-        char andar[20];
-        sprintf(andar, "andar: %d/%d", predio.jirobaldo.z + 1, predio.altura);
-        renderText(titleFont, andar, aux, (SDL_Color) {200, 200, 200}, 1);
-        char moves[20];
-        sprintf(moves, "moves: %d", passos);
-        renderText(titleFont, moves, aux, (SDL_Color) {200, 200, 200}, 2);
+        renderInfoBar(aux);
+        
 
         //Renderiza o 'jogo' principal
         aux.h = (predio.h >= predio.w) ? (gameViewport.h/predio.h) : (gameViewport.w/predio.w);
@@ -140,47 +143,16 @@ int main(int argc, char **argv){
             if(event.type == SDL_QUIT){
                 quit = true;
             }else{
-                //Valida eventos
                 validaEventos(event);
             }
         }
 
         if(isModoResolvedor && passosPorSegundo > 0){
-            int passo = resp->p[passos];
-            passos++;
-            switch(passo){
-                case PASSO_CIMA:
-                    predio.jirobaldo.face = FACE_NORTH;
-                    predio.jirobaldo.isAnimating = true;
-                    predio.jirobaldo.x--;
-                    break;
-                case PASSO_BAIXO:
-                    predio.jirobaldo.face =FACE_SOUTH;
-                    predio.jirobaldo.isAnimating = true;
-                    predio.jirobaldo.x++;
-                    break;
-                case PASSO_ESQUERDA:
-                    predio.jirobaldo.face = FACE_WEST;
-                    predio.jirobaldo.isAnimating = true;
-                    predio.jirobaldo.y--;
-                    break;
-                case PASSO_DIREITA:
-                    predio.jirobaldo.face = FACE_EAST;
-                    predio.jirobaldo.isAnimating = true;
-                    predio.jirobaldo.y++;
-                    break;
-                case PASSO_SOBE:
-                    predio.jirobaldo.z++;
-                    break;
-                case PASSO_DESCE:
-                    predio.jirobaldo.z--;
-                    break;
-                case PASSO_ENCHE:
-                    Mix_PlayChannel(-1, water, 0);
-                    predio.jirobaldo.baldes++;
-                    break;
-            }
-            jirobaldoValido();
+            SDL_Event event;
+            SDL_zero(event);
+            event.type = SDL_KEYDOWN;
+            event.key.keysym.sym = SDLK_RIGHT;
+            SDL_PushEvent(&event);
         }
         renderDelay(renderTime);
     }
@@ -262,7 +234,7 @@ void validaEventos(SDL_Event event){
     int x = predio.jirobaldo.x;
     int y = predio.jirobaldo.y;
     int z = predio.jirobaldo.z;
-    if(isModoResolvedor && passosPorSegundo == 0){
+    if(isModoResolvedor){
         if(event.type == SDL_KEYDOWN && (event.key.keysym.sym == SDLK_RIGHT || event.key.keysym.sym == SDLK_LEFT)){
             int passo;
             int tecla = event.key.keysym.sym;
@@ -434,6 +406,18 @@ void renderText(TTF_Font *fonte, char *texto, SDL_Rect aux, SDL_Color cor, int a
     SDL_DestroyTexture(textoTex);
 }
 
+void renderInfoBar(SDL_Rect aux){
+    char baldes[20];
+    sprintf(baldes, "baldes: %d/%d", predio.jirobaldo.baldes, predio.jirobaldo.MAX_BALDES);
+    renderText(titleFont, baldes, aux, (SDL_Color) {200, 200, 200}, 0);
+    char andar[20];
+    sprintf(andar, "andar: %d/%d", predio.jirobaldo.z + 1, predio.altura);
+    renderText(titleFont, andar, aux, (SDL_Color) {200, 200, 200}, 1);
+    char moves[20];
+    sprintf(moves, "moves: %d", passos);
+    renderText(titleFont, moves, aux, (SDL_Color) {200, 200, 200}, 2);
+}
+
 bool isSaida(){
     int x = predio.jirobaldo.x;
     int y = predio.jirobaldo.y;
@@ -501,11 +485,13 @@ void renderDelay(Uint32 renderTime){
     Uint32 t = SDL_GetTicks();
     Uint32 delay = 1000/30; //"30 fps"
     Uint32 render = t - renderTime;
-    if(isModoResolvedor && passosPorSegundo > 30){
+    if(isModoResolvedor && passosPorSegundo > 30 && passosPorSegundo <= 1000){
         delay = 1000/passosPorSegundo;
+    }else if(passosPorSegundo > 1000){
+        delay = 1;
     }
+
     if(render < delay){
-        //TODO: Precisa "compensar" o incremento do frame do fogo
         SDL_Delay(delay - render - 1);
     }
 }
