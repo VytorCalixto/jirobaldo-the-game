@@ -103,6 +103,7 @@ int main(int argc, char **argv){
     titleTheme = Mix_LoadMUS("data/audio/bost-imagine-the-fire.ogg");
     fire = Mix_LoadMUS("data/audio/fire.wav");
     doors = Mix_LoadMUS("data/audio/light-my-fire.ogg");
+    footstep = Mix_LoadWAV("data/audio/footstep3.wav");
     Mix_PlayMusic(titleTheme, -1);
     
     //SplashScreen
@@ -134,6 +135,7 @@ int main(int argc, char **argv){
      *         Se for simulador lida com a jogabilidade
      *         Se for resolvedor, avança/retrocede um passo
      */
+    Mix_FadeOutMusic(2000);
     Mix_PlayMusic(fire, -1);
     while(!quit){
         renderTime = SDL_GetTicks();
@@ -273,6 +275,8 @@ void fechaSDL(){
     Mix_FreeMusic(titleTheme);
     Mix_FreeMusic(fire);
     Mix_FreeMusic(doors);
+    Mix_FreeChunk(footstep);
+    Mix_FreeChunk(water);
     SDL_DestroyRenderer(screen);
     SDL_DestroyWindow(window);
     TTF_CloseFont(titleFont);
@@ -349,6 +353,7 @@ void validaEventos(SDL_Event event){
                         predio.jirobaldo.face = FACE_WEST;
                         predio.jirobaldo.isAnimating = true;
                         passos++;
+                        Mix_PlayChannel(-1, footstep, 0);
                     }else{
                         predio.jirobaldo.y++;
                     }
@@ -359,6 +364,7 @@ void validaEventos(SDL_Event event){
                         predio.jirobaldo.face = FACE_EAST;
                         predio.jirobaldo.isAnimating = true;
                         passos++;
+                        Mix_PlayChannel(-1, footstep, 0);
                     }else{
                         predio.jirobaldo.y--;
                     }
@@ -369,6 +375,7 @@ void validaEventos(SDL_Event event){
                         predio.jirobaldo.face = FACE_NORTH;
                         predio.jirobaldo.isAnimating = true;
                         passos++;
+                        Mix_PlayChannel(-1, footstep, 0);
                     }else{
                         predio.jirobaldo.x++;
                     }
@@ -379,6 +386,7 @@ void validaEventos(SDL_Event event){
                         predio.jirobaldo.face = FACE_SOUTH;
                         predio.jirobaldo.isAnimating = true;
                         passos++;
+                        Mix_PlayChannel(-1, footstep, 0);
                     }else{
                         predio.jirobaldo.x--;
                     }

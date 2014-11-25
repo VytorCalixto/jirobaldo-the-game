@@ -4,12 +4,8 @@
 ci067_sdl2/
 data/*
 !data/images
-!data/stair-up-down.jpg
-!data/skorpios-pack
 !data/audio
 !data/fonts
-!data/images
-!data/DawnLike_3
 *.swp
 *.swa
 *.o
