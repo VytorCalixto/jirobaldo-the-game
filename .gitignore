@@ -6,6 +6,7 @@ data/*
 !data/images
 !data/audio
 !data/fonts
+!especificacao.pdf
 *.swp
 *.swa
 *.o
